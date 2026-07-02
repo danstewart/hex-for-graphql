@@ -124,13 +124,13 @@ export function SettingsModal() {
       onClick={() => setSettingsOpen(false)}
     >
       <div
-        className="bg-gray-800 rounded-lg p-6 w-[520px] shadow-2xl border border-gray-700 max-h-[90vh] overflow-y-auto"
+        className="bg-navy-900 rounded-lg p-6 w-[520px] shadow-2xl border border-navy-700 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-base font-semibold mb-5">Settings</h2>
 
         {/* Connection */}
-        <label className="block mb-1 text-xs text-gray-400 uppercase tracking-wider">
+        <label className="block mb-1 text-xs text-slate-400 uppercase tracking-wider">
           GraphQL Endpoint
         </label>
         <input
@@ -138,11 +138,11 @@ export function SettingsModal() {
           value={endpoint}
           onChange={(e) => setLocalEndpoint(e.target.value)}
           placeholder="https://api.example.com/graphql"
-          className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm mb-5 focus:outline-none focus:border-indigo-500 placeholder-gray-600"
+          className="w-full bg-navy-950 border border-navy-700 rounded px-3 py-2 text-sm mb-5 focus:outline-none focus:border-violet-500 placeholder-slate-600"
           autoFocus
         />
 
-        <label className="block mb-2 text-xs text-gray-400 uppercase tracking-wider">
+        <label className="block mb-2 text-xs text-slate-400 uppercase tracking-wider">
           Headers
         </label>
         <div className="space-y-2 mb-2">
@@ -152,17 +152,17 @@ export function SettingsModal() {
                 value={key}
                 onChange={(e) => updateHeader(i, 0, e.target.value)}
                 placeholder="Key"
-                className="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-indigo-500 placeholder-gray-600"
+                className="flex-1 bg-navy-950 border border-navy-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
               />
               <input
                 value={value}
                 onChange={(e) => updateHeader(i, 1, e.target.value)}
                 placeholder="Value"
-                className="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-indigo-500 placeholder-gray-600"
+                className="flex-1 bg-navy-950 border border-navy-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
               />
               <button
                 onClick={() => removeHeader(i)}
-                className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-red-400 transition-colors shrink-0"
+                className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-red-400 transition-colors shrink-0"
               >
                 ✕
               </button>
@@ -171,24 +171,24 @@ export function SettingsModal() {
         </div>
         <button
           onClick={addHeader}
-          className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors mb-6"
+          className="text-xs text-violet-400 hover:text-violet-300 transition-colors mb-6"
         >
           + Add header
         </button>
 
         {/* Editor appearance */}
-        <div className="border-t border-gray-700 pt-5 mb-6">
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-4">Editor</p>
+        <div className="border-t border-navy-700 pt-5 mb-6">
+          <p className="text-xs text-slate-400 uppercase tracking-wider mb-4">Editor</p>
 
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block mb-1 text-xs text-gray-500">Font Family</label>
+              <label className="block mb-1 text-xs text-slate-500">Font Family</label>
               <input
                 type="text"
                 value={editorFont}
                 onChange={(e) => setLocalEditorFont(e.target.value)}
                 placeholder="Monaco, monospace"
-                className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 placeholder-gray-600"
+                className="w-full bg-navy-950 border border-navy-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
                 style={{ fontFamily: editorFont || undefined }}
               />
               {installedFonts.length > 0 && (
@@ -197,7 +197,7 @@ export function SettingsModal() {
                     <button
                       key={f}
                       onClick={() => applyFontSuggestion(f)}
-                      className="text-[11px] text-gray-500 hover:text-indigo-400 transition-colors"
+                      className="text-[11px] text-slate-500 hover:text-violet-400 transition-colors"
                       style={{ fontFamily: `${f}, monospace` }}
                     >
                       {f}
@@ -208,37 +208,37 @@ export function SettingsModal() {
             </div>
 
             <div className="w-24 shrink-0">
-              <label className="block mb-1 text-xs text-gray-500">Font Size</label>
+              <label className="block mb-1 text-xs text-slate-500">Font Size</label>
               <input
                 type="number"
                 value={editorFontSize}
                 onChange={(e) => setLocalEditorFontSize(Number(e.target.value))}
                 min={8}
                 max={32}
-                className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                className="w-full bg-navy-950 border border-navy-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-violet-500"
               />
             </div>
           </div>
 
           {/* Preview */}
           <div
-            className="mt-3 px-3 py-2 bg-gray-900 rounded border border-gray-700 text-gray-400"
+            className="mt-3 px-3 py-2 bg-navy-950 rounded border border-navy-700 text-slate-400"
             style={{ fontFamily: editorFont || 'Monaco, monospace', fontSize: editorFontSize }}
           >
             query GetUser($id: ID!) &#123; user(id: $id) &#123; name &#125; &#125;
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-gray-700">
+        <div className="flex justify-end gap-2 pt-2 border-t border-navy-700">
           <button
             onClick={() => setSettingsOpen(false)}
-            className="px-4 py-2 rounded text-sm text-gray-400 hover:text-gray-200 transition-colors"
+            className="px-4 py-2 rounded text-sm text-slate-400 hover:text-slate-200 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 rounded text-sm bg-indigo-600 hover:bg-indigo-500 font-medium transition-colors"
+            className="px-4 py-2 rounded text-sm bg-violet-600 hover:bg-violet-500 font-medium transition-colors"
           >
             Save &amp; Refresh Schema
           </button>

@@ -65,9 +65,9 @@ export function Sidebar({ onNavigate }: Props) {
   const hasAny = operations.length > 0;
 
   return (
-    <div className="w-full h-full bg-gray-800 flex flex-col overflow-y-auto text-sm select-none">
+    <div className="w-full h-full bg-navy-900 flex flex-col overflow-y-auto text-sm select-none">
       {!hasAny && (
-        <p className="p-4 text-gray-500 text-xs leading-relaxed">
+        <p className="p-4 text-slate-500 text-xs leading-relaxed">
           Named operations appear here after you run them.
         </p>
       )}
@@ -77,7 +77,7 @@ export function Sidebar({ onNavigate }: Props) {
         if (entityMap.size === 0) return null;
         return (
           <div key={type} className="mt-1">
-            <div className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+            <div className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               {LABELS[type]}
             </div>
             {[...entityMap.entries()].map(([entity, ops]) => {
@@ -87,7 +87,7 @@ export function Sidebar({ onNavigate }: Props) {
               <div key={entity}>
                 <button
                   onClick={() => toggleEntity(key)}
-                  className="w-full flex items-center gap-1 px-4 py-0.5 text-[11px] font-medium text-gray-400 hover:text-gray-300 transition-colors"
+                  className="w-full flex items-center gap-1 px-4 py-0.5 text-[11px] font-medium text-slate-400 hover:text-slate-300 transition-colors"
                 >
                   <span className="text-[9px] opacity-60">{isCollapsed ? '▶' : '▼'}</span>
                   {entity}
@@ -95,18 +95,18 @@ export function Sidebar({ onNavigate }: Props) {
                 {!isCollapsed && ops.map((op) => (
                   <div
                     key={op.id}
-                    className="group flex items-center hover:bg-gray-700 transition-colors"
+                    className="group flex items-center hover:bg-navy-800 transition-colors"
                   >
                     <button
                       onClick={() => onNavigate(op.name)}
-                      className="flex-1 text-left pl-7 pr-2 py-1 text-gray-300 group-hover:text-gray-100 truncate min-w-0"
+                      className="flex-1 text-left pl-7 pr-2 py-1 text-slate-300 group-hover:text-slate-100 truncate min-w-0"
                       title={op.name}
                     >
                       {op.name}
                     </button>
                     <button
                       onClick={(e) => void handleDelete(e, op.id)}
-                      className="shrink-0 w-6 h-6 mr-1 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 hover:bg-gray-600 transition-all"
+                      className="shrink-0 w-6 h-6 mr-1 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 hover:bg-navy-700 transition-all"
                       title={`Delete ${op.name}`}
                     >
                       ✕

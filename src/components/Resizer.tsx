@@ -50,7 +50,7 @@ export function Resizer({ axis, size, min, max, onResize, reverse }: Props) {
       <div
         className={[
           isX ? 'w-px h-full' : 'h-px w-full',
-          'bg-gray-700 group-hover:bg-indigo-500 transition-colors duration-100',
+          'bg-navy-700 group-hover:bg-violet-500 transition-colors duration-100',
         ].join(' ')}
       />
     </div>

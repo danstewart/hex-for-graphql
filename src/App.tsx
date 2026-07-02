@@ -26,14 +26,14 @@ class ErrorBoundary extends Component<
     if (this.state.error) {
       const err = this.state.error as Error;
       return (
-        <div className="h-screen flex flex-col items-center justify-center bg-gray-900 text-gray-100 p-8 gap-4">
+        <div className="h-screen flex flex-col items-center justify-center bg-navy-950 text-slate-100 p-8 gap-4">
           <p className="text-red-400 font-semibold">Something went wrong</p>
-          <pre className="text-xs text-gray-400 max-w-lg whitespace-pre-wrap">
+          <pre className="text-xs text-slate-400 max-w-lg whitespace-pre-wrap">
             {err.message}
           </pre>
           <button
             onClick={() => this.setState({ error: null })}
-            className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-sm"
+            className="px-4 py-2 rounded bg-navy-800 hover:bg-navy-700 text-sm"
           >
             Retry
           </button>
@@ -137,7 +137,7 @@ function AppInner() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-gray-100 overflow-hidden">
+    <div className="flex flex-col h-screen bg-navy-950 text-slate-100 overflow-hidden">
       <Toolbar />
 
       {bootError && (
@@ -148,7 +148,7 @@ function AppInner() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar with controlled width */}
-        <div style={{ width: sidebarWidth, flexShrink: 0 }} className="overflow-hidden border-r border-gray-700">
+        <div style={{ width: sidebarWidth, flexShrink: 0 }} className="overflow-hidden border-r border-navy-700">
           <Sidebar onNavigate={handleNavigate} />
         </div>
 
@@ -171,7 +171,7 @@ function AppInner() {
                   onNavigateHandled={handleNavigateHandled}
                 />
               ) : (
-                <div className="h-full flex items-center justify-center text-gray-600 text-sm">
+                <div className="h-full flex items-center justify-center text-slate-600 text-sm">
                   Loading…
                 </div>
               )}
@@ -186,7 +186,7 @@ function AppInner() {
               reverse
             />
 
-            <div style={{ width: responseWidth, flexShrink: 0 }} className="overflow-hidden border-l border-gray-700">
+            <div style={{ width: responseWidth, flexShrink: 0 }} className="overflow-hidden border-l border-navy-700">
               <ResponsePane />
             </div>
           </div>
@@ -200,7 +200,7 @@ function AppInner() {
           />
 
           {/* Variables panel */}
-          <div style={{ height: bottomHeight, flexShrink: 0 }} className="border-t border-gray-700 overflow-hidden">
+          <div style={{ height: bottomHeight, flexShrink: 0 }} className="border-t border-navy-700 overflow-hidden">
             <BottomPanel />
           </div>
         </div>
@@ -216,7 +216,7 @@ function AppInner() {
               onResize={setDocWidth}
               reverse
             />
-            <div style={{ width: docWidth, flexShrink: 0 }} className="overflow-hidden border-l border-gray-700">
+            <div style={{ width: docWidth, flexShrink: 0 }} className="overflow-hidden border-l border-navy-700">
               <DocViewer />
             </div>
           </>

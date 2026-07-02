@@ -1,6 +1,7 @@
 import { useEffect, useRef, useMemo } from 'react';
-import MonacoEditor, { type OnMount } from '@monaco-editor/react';
+import MonacoEditor, { type OnMount, type BeforeMount } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor';
+import { registerTheme, THEME_NAME } from '../lib/monacoTheme';
 import { useStore } from '../store';
 import { runOperation } from '../lib/actions';
 import { findOperationLine, findOperationAtLine, formatOperationAtLine } from '../lib/graphql';
@@ -113,6 +114,10 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
     onNavigateHandled();
   }, [navigateTo, onNavigateHandled, operations, setEditorContent]);
 
+  const handleBeforeMount: BeforeMount = (monaco) => {
+    registerTheme(monaco);
+  };
+
   const handleMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
 
@@ -129,16 +134,22 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       editor.trigger('keyboard', 'editor.action.triggerSuggest', {});
     });
 
-    // ⌘↵ runs the operation at the cursor
+    // ⌘↵ runs the operation at the cursor.
+    // addCommand takes exclusive ownership of the keybinding, preventing Monaco's
+    // built-in "insert line below" from firing first and moving the cursor.
     editor.addAction({
       id: 'hex.run',
       label: 'Run GraphQL Operation',
-      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
       run: (ed) => {
         const content = ed.getValue();
         const line = ed.getPosition()?.lineNumber ?? 1;
         void runOperation(content, line);
       },
+    });
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+      const content = editor.getValue();
+      const line = editor.getPosition()?.lineNumber ?? 1;
+      void runOperation(content, line);
     });
 
     // Update window title to reflect the operation at cursor
@@ -168,21 +179,22 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex h-8 shrink-0 items-center px-4 bg-gray-800 border-b border-gray-700">
-        <span className="text-xs font-medium text-gray-400">Request</span>
+      <div className="flex h-8 shrink-0 items-center px-4 bg-navy-900 border-b border-navy-700">
+        <span className="text-xs font-medium text-slate-400">Request</span>
       </div>
       <div className="flex-1 overflow-hidden">
         <MonacoEditor
           path="hex://operation.graphql"
           height="100%"
           defaultLanguage="graphql"
-          theme="vs-dark"
+          theme={THEME_NAME}
           defaultValue=""
           options={editorOptions}
+          beforeMount={handleBeforeMount}
           onMount={handleMount}
           onChange={handleChange}
           loading={
-            <div className="h-full flex items-center justify-center text-gray-600 text-sm">
+            <div className="h-full flex items-center justify-center text-slate-600 text-sm">
               Loading editor…
             </div>
           }

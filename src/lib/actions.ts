@@ -1,7 +1,6 @@
 import { useStore } from '../store';
 import { executeGraphQL, parseDocumentOperations, findOperationAtLine } from './graphql';
 import { upsertOperation, loadOperations } from './db';
-import type { Operation } from '../store';
 
 export async function runOperation(
   editorContent: string,
@@ -35,6 +34,9 @@ export async function runOperation(
   }
 
   const operationName = findOperationAtLine(editorContent, cursorLine);
+  const ops = parseDocumentOperations(editorContent);
+  const currentOp = operationName ? ops.find((o) => o.name === operationName) : undefined;
+  const queryToSend = currentOp?.body ?? editorContent;
 
   let variables: unknown = {};
   try {
@@ -47,7 +49,7 @@ export async function runOperation(
     const result = await executeGraphQL(
       endpoint,
       headersMap,
-      editorContent,
+      queryToSend,
       variables,
       operationName,
     );
@@ -59,12 +61,8 @@ export async function runOperation(
   }
 
   // Persist only the operation that was actually run.
-  if (operationName) {
-    const ops = parseDocumentOperations(editorContent);
-    const ran = ops.find((o) => o.name === operationName) as Pick<Operation, 'name' | 'type' | 'body'> | undefined;
-    if (ran) {
-      await upsertOperation(ran);
-      setOperations(await loadOperations());
-    }
+  if (currentOp) {
+    await upsertOperation(currentOp);
+    setOperations(await loadOperations());
   }
 }
