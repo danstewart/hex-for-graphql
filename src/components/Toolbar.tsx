@@ -1,10 +1,11 @@
+import { Play, Loader2, Check, Settings as SettingsIcon } from 'lucide-react';
 import { useStore } from '../store';
 import { refreshSchema } from '../lib/schema';
 
 const SCHEMA_STATUS_LABEL: Record<string, string> = {
   none: 'No Schema',
   loading: 'Loading…',
-  loaded: '✓',
+  loaded: 'Schema Loaded',
   error: 'Schema Error',
 };
 
@@ -32,7 +33,11 @@ export function Toolbar() {
         disabled={isExecuting}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-40 transition-all hover:shadow-[0_0_14px_rgba(139,92,246,0.45)] disabled:shadow-none"
       >
-        <span className="text-[10px] leading-none">{isExecuting ? '●' : '▶'}</span>
+        {isExecuting ? (
+          <Loader2 size={12} className="animate-spin" />
+        ) : (
+          <Play size={12} fill="currentColor" />
+        )}
         <span>Run</span>
         <kbd className="text-[10px] opacity-40 font-sans tracking-tight">⌘↵</kbd>
       </button>
@@ -55,7 +60,8 @@ export function Toolbar() {
         Refresh Schema
       </button>
 
-      <span className={`text-xs font-medium tabular-nums ${SCHEMA_STATUS_CLASS[schemaStatus]}`}>
+      <span className={`flex items-center gap-1 text-xs font-medium ${SCHEMA_STATUS_CLASS[schemaStatus]}`}>
+        {schemaStatus === 'loaded' && <Check size={12} />}
         {SCHEMA_STATUS_LABEL[schemaStatus]}
       </span>
 
@@ -76,9 +82,9 @@ export function Toolbar() {
       <button
         onClick={() => setSettingsOpen(true)}
         title="Settings (⌘,)"
-        className="w-8 h-8 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-navy-800 transition-colors text-sm"
+        className="w-8 h-8 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-navy-800 transition-colors"
       >
-        ⚙
+        <SettingsIcon size={15} />
       </button>
     </div>
   );

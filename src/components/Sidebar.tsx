@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ChevronRight, ChevronDown, X } from 'lucide-react';
 import { parse, Kind } from 'graphql';
 import { useStore } from '../store';
 import type { Operation } from '../store';
@@ -77,7 +78,7 @@ export function Sidebar({ onNavigate }: Props) {
         if (entityMap.size === 0) return null;
         return (
           <div key={type} className="mt-1">
-            <div className="px-3 pt-3 pb-1 text-[9px] font-semibold uppercase tracking-widest text-slate-600">
+            <div className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
               {LABELS[type]}
             </div>
             {[...entityMap.entries()].map(([entity, ops]) => {
@@ -89,7 +90,9 @@ export function Sidebar({ onNavigate }: Props) {
                   onClick={() => toggleEntity(key)}
                   className="w-full flex items-center gap-1.5 px-3 py-0.5 text-[11px] font-medium text-slate-500 hover:text-slate-300 transition-colors"
                 >
-                  <span className="text-[9px] opacity-60">{isCollapsed ? '▶' : '▼'}</span>
+                  <span className="opacity-60">
+                    {isCollapsed ? <ChevronRight size={10} /> : <ChevronDown size={10} />}
+                  </span>
                   {entity}
                 </button>
                 {!isCollapsed && ops.map((op) => (
@@ -106,10 +109,10 @@ export function Sidebar({ onNavigate }: Props) {
                     </button>
                     <button
                       onClick={(e) => void handleDelete(e, op.id)}
-                      className="shrink-0 w-6 h-6 mr-1 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 hover:bg-navy-700 transition-all"
+                      className="shrink-0 w-6 h-6 mr-1 flex items-center justify-center rounded-md opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 hover:bg-navy-700 transition-all"
                       title={`Delete ${op.name}`}
                     >
-                      ✕
+                      <X size={13} />
                     </button>
                   </div>
                 ))}

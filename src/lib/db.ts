@@ -62,7 +62,7 @@ export async function loadSettings(): Promise<{
   return {
     endpoint: map['endpoint'] ?? '',
     headers,
-    editorFont: map['editor_font'] ?? 'Monaco, monospace',
+    editorFont: map['editor_font'] ?? 'Geist Mono, monospace',
     editorFontSize: parseInt(map['editor_font_size'] ?? '14', 10),
   };
 }

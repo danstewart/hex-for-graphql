@@ -76,7 +76,7 @@ export const useStore = create<AppState>((set) => ({
   isExecuting: false,
   executeRequested: 0,
   formatRequested: 0,
-  editorFont: 'Monaco, monospace',
+  editorFont: 'Geist Mono, monospace',
   editorFontSize: 14,
   schemaStatus: 'none',
   schemaError: null,

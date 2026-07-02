@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { ChevronRight, ChevronDown, X } from 'lucide-react';
 import {
   isObjectType, isInputObjectType, isEnumType, isScalarType,
   isInterfaceType, isUnionType,
@@ -33,6 +34,22 @@ function fuzzyScore(query: string, text: string): number {
     }
   }
   return qi === q.length ? s : -1;
+}
+
+/** Disclosure indicator shared by every collapsible row. `open === null` means "not collapsible". */
+function ToggleIcon({ open }: { open: boolean | null }) {
+  if (open === null) {
+    return (
+      <span className="w-2.5 shrink-0 flex justify-center">
+        <span className="w-1 h-1 rounded-full bg-slate-600" />
+      </span>
+    );
+  }
+  return (
+    <span className="text-slate-600 w-2.5 shrink-0 flex justify-center">
+      {open ? <ChevronDown size={9} /> : <ChevronRight size={9} />}
+    </span>
+  );
 }
 
 function TypeRef({ t, onNavigate }: { t: string; onNavigate?: (name: string) => void }) {
@@ -89,9 +106,7 @@ function FieldRow({ name, typeStr, description, args, indent, expanded, onToggle
         className="w-full text-left flex items-center gap-1 py-[3px] hover:bg-navy-800/40 transition-colors text-[11px]"
         style={{ paddingLeft: 8 + indent * 12 }}
       >
-        <span className="text-slate-600 w-2.5 shrink-0 text-[9px] text-center">
-          {hasDetail ? (expanded ? '▼' : '▶') : '·'}
-        </span>
+        <ToggleIcon open={hasDetail ? expanded : null} />
         <span className="text-slate-200 font-mono">{name}</span>
         <span className="text-slate-600 mx-0.5">:</span>
         <TypeRef t={typeStr} onNavigate={onNavigate} />
@@ -121,7 +136,7 @@ function Section({ label, count, expanded, onToggle, children }: SectionProps) {
         onClick={onToggle}
         className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 hover:text-slate-300 transition-colors"
       >
-        <span className="text-[9px]">{expanded ? '▼' : '▶'}</span>
+        <ToggleIcon open={expanded} />
         <span>{label}</span>
         <span className="text-slate-600 font-normal normal-case tracking-normal ml-0.5">({count})</span>
       </button>
@@ -312,7 +327,7 @@ export function DocViewer() {
           className="w-full text-left flex items-start gap-1 py-[3px] hover:bg-navy-800/40 transition-colors text-[11px]"
           style={{ paddingLeft: 20 }}
         >
-          <span className="text-[9px] text-slate-600 w-2.5 shrink-0 text-center mt-0.5">{open ? '▼' : '▶'}</span>
+          <span className="mt-0.5"><ToggleIcon open={open} /></span>
           <div className="min-w-0">
             <div className="text-green-300 font-mono">{typeName}</div>
             {type.description && <div className="text-slate-500 text-[10px] truncate leading-relaxed">{type.description}</div>}
@@ -351,7 +366,7 @@ export function DocViewer() {
           className="w-full text-left flex items-start gap-1 py-[3px] hover:bg-navy-800/40 transition-colors text-[11px]"
           style={{ paddingLeft: 20 }}
         >
-          <span className="text-[9px] text-slate-600 w-2.5 shrink-0 text-center mt-0.5">{open ? '▼' : '▶'}</span>
+          <span className="mt-0.5"><ToggleIcon open={open} /></span>
           <div className="min-w-0">
             <div className="text-orange-300 font-mono">{typeName}</div>
             {type.description && <div className="text-slate-500 text-[10px] truncate leading-relaxed">{type.description}</div>}
@@ -389,7 +404,7 @@ export function DocViewer() {
           className="w-full text-left flex items-start gap-1 py-[3px] hover:bg-navy-800/40 transition-colors text-[11px]"
           style={{ paddingLeft: 20 }}
         >
-          <span className="text-[9px] text-slate-600 w-2.5 shrink-0 text-center mt-0.5">{open ? '▼' : '▶'}</span>
+          <span className="mt-0.5"><ToggleIcon open={open} /></span>
           <div className="min-w-0">
             <div className="text-purple-300 font-mono">{typeName}</div>
             {type.description && <div className="text-slate-500 text-[10px] truncate leading-relaxed">{type.description}</div>}
@@ -401,7 +416,7 @@ export function DocViewer() {
             className="flex items-center gap-1 py-[3px] text-[11px]"
             style={{ paddingLeft: 32 }}
           >
-            <span className="text-slate-600 text-[9px] w-2.5 text-center">·</span>
+            <ToggleIcon open={null} />
             <span className="text-slate-300 font-mono">{val.name}</span>
             {val.description && <span className="text-slate-600 truncate">{val.description}</span>}
           </div>
@@ -418,9 +433,9 @@ export function DocViewer() {
         <button
           onClick={() => setDocOpen(false)}
           title="Close documentation"
-          className="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 hover:bg-navy-800 transition-colors text-xs"
+          className="w-6 h-6 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-navy-800 transition-colors"
         >
-          ✕
+          <X size={13} />
         </button>
       </div>
 
@@ -431,7 +446,7 @@ export function DocViewer() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search types & fields…"
-          className="w-full bg-navy-800 border border-navy-700 rounded px-2 py-1 text-[12px] text-slate-200 placeholder-slate-500 outline-none focus:border-violet-500 transition-colors"
+          className="w-full bg-navy-800 border border-navy-700 rounded-md px-2 py-1 text-[12px] text-slate-200 placeholder-slate-500 outline-none focus:border-violet-500 transition-colors"
         />
       </div>
 
@@ -461,9 +476,7 @@ export function DocViewer() {
                     onClick={() => toggle(result.key)}
                     className="w-full text-left flex items-start gap-1.5 px-2 py-1.5 hover:bg-navy-800/40 transition-colors text-[11px]"
                   >
-                    <span className="text-[9px] text-slate-600 mt-0.5 shrink-0 w-2.5 text-center">
-                      {expanded.has(result.key) ? '▼' : '▶'}
-                    </span>
+                    <span className="mt-0.5"><ToggleIcon open={expanded.has(result.key)} /></span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-1 flex-wrap">
                         {result.fieldName ? (
@@ -570,7 +583,7 @@ export function DocViewer() {
                         className="w-full text-left flex items-start gap-1 py-[3px] hover:bg-navy-800/40 transition-colors text-[11px]"
                         style={{ paddingLeft: 20 }}
                       >
-                        <span className="text-[9px] text-slate-600 w-2.5 shrink-0 text-center mt-0.5">{open ? '▼' : '▶'}</span>
+                        <span className="mt-0.5"><ToggleIcon open={open} /></span>
                         <div className="min-w-0">
                           <div className="text-pink-300 font-mono">{n}</div>
                           {type.description && <div className="text-slate-500 text-[10px] truncate leading-relaxed">{type.description}</div>}
@@ -578,7 +591,7 @@ export function DocViewer() {
                       </button>
                       {open && type.getTypes().map(m => (
                         <div key={m.name} className="flex items-center gap-1 py-[3px] text-[11px]" style={{ paddingLeft: 32 }}>
-                          <span className="text-slate-600 text-[9px] w-2.5 text-center">·</span>
+                          <ToggleIcon open={null} />
                           <span
                             className="text-green-300 font-mono cursor-pointer hover:text-green-200 hover:underline"
                             onClick={() => navigateToType(m.name)}
@@ -621,7 +634,7 @@ export function DocViewer() {
                   const type = schema.getType(n);
                   return (
                     <div key={n} id={`doc-type-${n}`} className="flex items-center gap-1 py-[3px] text-[11px]" style={{ paddingLeft: 20 }}>
-                      <span className="text-slate-600 text-[9px] w-2.5 text-center">·</span>
+                      <ToggleIcon open={null} />
                       <span className="text-cyan-300 font-mono">{n}</span>
                       {type?.description && <span className="text-slate-500 truncate ml-1">{type.description}</span>}
                     </div>

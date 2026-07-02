@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { useStore } from '../store';
 import { saveSettings } from '../lib/db';
 import { refreshSchema } from '../lib/schema';
@@ -86,7 +87,7 @@ export function SettingsModal() {
   async function handleSave() {
     const cleanHeaders = headers.filter(([k]) => k.trim() !== '');
     const clampedSize = Math.max(8, Math.min(32, editorFontSize));
-    const fontValue = editorFont.trim() || 'Monaco, monospace';
+    const fontValue = editorFont.trim() || 'Geist Mono, monospace';
     setEndpoint(endpoint);
     setHeaders(cleanHeaders);
     setEditorFont(fontValue);
@@ -124,7 +125,7 @@ export function SettingsModal() {
       onClick={() => setSettingsOpen(false)}
     >
       <div
-        className="bg-navy-900 rounded-lg p-6 w-[520px] shadow-2xl border border-navy-700 max-h-[90vh] overflow-y-auto"
+        className="bg-navy-900 rounded-xl p-6 w-[520px] shadow-2xl border border-navy-700 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-base font-semibold mb-5">Settings</h2>
@@ -138,7 +139,7 @@ export function SettingsModal() {
           value={endpoint}
           onChange={(e) => setLocalEndpoint(e.target.value)}
           placeholder="https://api.example.com/graphql"
-          className="w-full bg-navy-950 border border-navy-700 rounded px-3 py-2 text-sm mb-5 focus:outline-none focus:border-violet-500 placeholder-slate-600"
+          className="w-full bg-navy-950 border border-navy-700 rounded-md px-3 py-2 text-sm mb-5 focus:outline-none focus:border-violet-500 placeholder-slate-600"
           autoFocus
         />
 
@@ -152,19 +153,19 @@ export function SettingsModal() {
                 value={key}
                 onChange={(e) => updateHeader(i, 0, e.target.value)}
                 placeholder="Key"
-                className="flex-1 bg-navy-950 border border-navy-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
+                className="flex-1 bg-navy-950 border border-navy-700 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
               />
               <input
                 value={value}
                 onChange={(e) => updateHeader(i, 1, e.target.value)}
                 placeholder="Value"
-                className="flex-1 bg-navy-950 border border-navy-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
+                className="flex-1 bg-navy-950 border border-navy-700 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
               />
               <button
                 onClick={() => removeHeader(i)}
                 className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-red-400 transition-colors shrink-0"
               >
-                ✕
+                <X size={13} />
               </button>
             </div>
           ))}
@@ -187,8 +188,8 @@ export function SettingsModal() {
                 type="text"
                 value={editorFont}
                 onChange={(e) => setLocalEditorFont(e.target.value)}
-                placeholder="Monaco, monospace"
-                className="w-full bg-navy-950 border border-navy-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
+                placeholder="Geist Mono, monospace"
+                className="w-full bg-navy-950 border border-navy-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
                 style={{ fontFamily: editorFont || undefined }}
               />
               {installedFonts.length > 0 && (
@@ -215,15 +216,15 @@ export function SettingsModal() {
                 onChange={(e) => setLocalEditorFontSize(Number(e.target.value))}
                 min={8}
                 max={32}
-                className="w-full bg-navy-950 border border-navy-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-violet-500"
+                className="w-full bg-navy-950 border border-navy-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-violet-500"
               />
             </div>
           </div>
 
           {/* Preview */}
           <div
-            className="mt-3 px-3 py-2 bg-navy-950 rounded border border-navy-700 text-slate-400"
-            style={{ fontFamily: editorFont || 'Monaco, monospace', fontSize: editorFontSize }}
+            className="mt-3 px-3 py-2 bg-navy-950 rounded-md border border-navy-700 text-slate-400"
+            style={{ fontFamily: editorFont || 'Geist Mono, monospace', fontSize: editorFontSize }}
           >
             query GetUser($id: ID!) &#123; user(id: $id) &#123; name &#125; &#125;
           </div>
@@ -232,13 +233,13 @@ export function SettingsModal() {
         <div className="flex justify-end gap-2 pt-2 border-t border-navy-700">
           <button
             onClick={() => setSettingsOpen(false)}
-            className="px-4 py-2 rounded text-sm text-slate-400 hover:text-slate-200 transition-colors"
+            className="px-4 py-2 rounded-md text-sm text-slate-400 hover:text-slate-200 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 rounded text-sm bg-violet-600 hover:bg-violet-500 font-medium transition-colors"
+            className="px-4 py-2 rounded-md text-sm bg-violet-600 hover:bg-violet-500 font-medium transition-colors"
           >
             Save &amp; Refresh Schema
           </button>

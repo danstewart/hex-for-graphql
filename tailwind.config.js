@@ -5,6 +5,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Geist', '-apple-system', 'system-ui', 'sans-serif'],
+        mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       colors: {
         navy: {
