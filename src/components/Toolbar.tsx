@@ -5,7 +5,7 @@ import { refreshSchema } from '../lib/schema';
 const SCHEMA_STATUS_LABEL: Record<string, string> = {
   none: 'No Schema',
   loading: 'Loading…',
-  loaded: 'Schema Ready',
+  loaded: '✓',
   error: 'Schema Error',
 };
 

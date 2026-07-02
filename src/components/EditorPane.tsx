@@ -5,7 +5,7 @@ import { registerTheme, THEME_NAME } from '../lib/monacoTheme';
 import { useStore } from '../store';
 import { runOperation } from '../lib/actions';
 import { findOperationLine, findOperationAtLine, formatOperationAtLine } from '../lib/graphql';
-import { saveEditorContent } from '../lib/db';
+import { saveEditorContent, renameOperationVariables } from '../lib/db';
 import { setMonacoInstance } from '../lib/schema';
 
 interface Props {
@@ -35,6 +35,7 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const contentRef = useRef(initialContent);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeOpRef = useRef<{ name: string | null; startLine: number | null }>({ name: null, startLine: null });
 
   const operations = useStore((s) => s.operations);
   const setEditorContent = useStore((s) => s.setEditorContent);
@@ -152,12 +153,27 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       void runOperation(content, line);
     });
 
-    // Update window title to reflect the operation at cursor
+    // Update window title and variables pane when cursor moves to a different operation
     editor.onDidChangeCursorPosition(() => {
       const pos = editor.getPosition();
       if (!pos) return;
-      const opName = findOperationAtLine(editor.getValue(), pos.lineNumber);
+      const content = editor.getValue();
+      const opName = findOperationAtLine(content, pos.lineNumber);
       document.title = opName ? `Hex — ${opName}` : 'Hex';
+      if (opName !== activeOpRef.current.name) {
+        const opInfo = opName ? formatOperationAtLine(content, pos.lineNumber) : null;
+        const newStartLine = opInfo?.startLine ?? null;
+        const store = useStore.getState();
+        if (opName && newStartLine !== null && newStartLine === activeOpRef.current.startLine) {
+          // Same position, name changed — rename, carry variables over
+          const oldName = activeOpRef.current.name;
+          store.renameCurrentOperation(opName);
+          if (oldName) void renameOperationVariables(oldName, opName);
+        } else {
+          store.setCurrentOperationName(opName);
+        }
+        activeOpRef.current = { name: opName, startLine: newStartLine };
+      }
     });
 
     if (initialContent) {

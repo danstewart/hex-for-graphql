@@ -21,6 +21,8 @@ interface AppState {
 
   // Bottom panels
   variablesContent: string;
+  operationVariables: Record<string, string>;
+  currentOperationName: string | null;
   response: string | null;
   isExecuting: boolean;
 
@@ -48,6 +50,9 @@ interface AppState {
   setOperations: (v: Operation[]) => void;
   setEditorContent: (v: string) => void;
   setVariablesContent: (v: string) => void;
+  setCurrentOperationName: (name: string | null) => void;
+  renameCurrentOperation: (newName: string) => void;
+  setOperationVariables: (v: Record<string, string>) => void;
   setResponse: (v: string | null) => void;
   setIsExecuting: (v: boolean) => void;
   requestExecute: () => void;
@@ -65,6 +70,8 @@ export const useStore = create<AppState>((set) => ({
   operations: [],
   editorContent: '',
   variablesContent: '{}',
+  operationVariables: {},
+  currentOperationName: null,
   response: null,
   isExecuting: false,
   executeRequested: 0,
@@ -80,7 +87,27 @@ export const useStore = create<AppState>((set) => ({
   setHeaders: (headers) => set({ headers }),
   setOperations: (operations) => set({ operations }),
   setEditorContent: (editorContent) => set({ editorContent }),
-  setVariablesContent: (variablesContent) => set({ variablesContent }),
+  setVariablesContent: (variablesContent) => set((s) => ({
+    variablesContent,
+    operationVariables: s.currentOperationName
+      ? { ...s.operationVariables, [s.currentOperationName]: variablesContent }
+      : s.operationVariables,
+  })),
+  setCurrentOperationName: (name) => set((s) => {
+    const saved = s.currentOperationName
+      ? { ...s.operationVariables, [s.currentOperationName]: s.variablesContent }
+      : s.operationVariables;
+    const variablesContent = (name && saved[name]) ?? '{}';
+    return { currentOperationName: name, operationVariables: saved, variablesContent };
+  }),
+  setOperationVariables: (operationVariables) => set({ operationVariables }),
+  renameCurrentOperation: (newName) => set((s) => {
+    const oldName = s.currentOperationName;
+    if (!oldName) return { currentOperationName: newName };
+    const operationVariables = { ...s.operationVariables, [newName]: s.variablesContent };
+    delete operationVariables[oldName];
+    return { currentOperationName: newName, operationVariables };
+  }),
   setResponse: (response) => set({ response }),
   setIsExecuting: (isExecuting) => set({ isExecuting }),
   requestExecute: () => set((s) => ({ executeRequested: s.executeRequested + 1 })),

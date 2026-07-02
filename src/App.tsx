@@ -1,7 +1,7 @@
 import { Component, useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from './store';
-import { loadSettings, loadOperations, loadEditorContent } from './lib/db';
+import { loadSettings, loadOperations, loadEditorContent, loadAllOperationVariables } from './lib/db';
 import { refreshSchema } from './lib/schema';
 import { Toolbar } from './components/Toolbar';
 import { Sidebar } from './components/Sidebar';
@@ -51,6 +51,7 @@ function AppInner() {
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   const setEditorFont = useStore((s) => s.setEditorFont);
   const setEditorFontSize = useStore((s) => s.setEditorFontSize);
+  const setOperationVariables = useStore((s) => s.setOperationVariables);
   const docOpen = useStore((s) => s.docOpen);
 
   // null = still loading from DB; string (including '') = loaded
@@ -95,16 +96,18 @@ function AppInner() {
   useEffect(() => {
     async function boot() {
       try {
-        const [settings, ops, content] = await Promise.all([
+        const [settings, ops, content, opVars] = await Promise.all([
           loadSettings(),
           loadOperations(),
           loadEditorContent(),
+          loadAllOperationVariables(),
         ]);
         setEndpoint(settings.endpoint);
         setHeaders(settings.headers);
         setEditorFont(settings.editorFont);
         setEditorFontSize(settings.editorFontSize);
         setOperations(ops);
+        setOperationVariables(opVars);
         setInitialContent(content);
         void refreshSchema();
       } catch (err) {
@@ -115,7 +118,7 @@ function AppInner() {
       }
     }
     void boot();
-  }, [setEndpoint, setHeaders, setOperations, setEditorFont, setEditorFontSize]);
+  }, [setEndpoint, setHeaders, setOperations, setEditorFont, setEditorFontSize, setOperationVariables]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {

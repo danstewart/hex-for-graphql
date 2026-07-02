@@ -36,6 +36,12 @@ async function migrate(conn: Database): Promise<void> {
   await conn.execute(
     `INSERT OR IGNORE INTO editor_state (id, content) VALUES (1, '')`,
   );
+  await conn.execute(`
+    CREATE TABLE IF NOT EXISTS operation_variables (
+      name      TEXT PRIMARY KEY,
+      variables TEXT NOT NULL DEFAULT '{}'
+    )
+  `);
 }
 
 export async function loadSettings(): Promise<{
@@ -123,4 +129,30 @@ export async function saveEditorContent(content: string): Promise<void> {
     `INSERT OR REPLACE INTO editor_state (id, content) VALUES (1, ?)`,
     [content],
   );
+}
+
+export async function loadAllOperationVariables(): Promise<Record<string, string>> {
+  const conn = await getDb();
+  const rows = await conn.select<{ name: string; variables: string }[]>(
+    'SELECT name, variables FROM operation_variables',
+  );
+  return Object.fromEntries(rows.map((r) => [r.name, r.variables]));
+}
+
+export async function saveOperationVariables(name: string, variables: string): Promise<void> {
+  const conn = await getDb();
+  await conn.execute(
+    `INSERT OR REPLACE INTO operation_variables (name, variables) VALUES (?, ?)`,
+    [name, variables],
+  );
+}
+
+export async function renameOperationVariables(oldName: string, newName: string): Promise<void> {
+  const conn = await getDb();
+  await conn.execute(
+    `INSERT OR REPLACE INTO operation_variables (name, variables)
+     SELECT ?, variables FROM operation_variables WHERE name = ?`,
+    [newName, oldName],
+  );
+  await conn.execute('DELETE FROM operation_variables WHERE name = ?', [oldName]);
 }
