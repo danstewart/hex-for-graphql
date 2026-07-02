@@ -1,6 +1,6 @@
 import { initializeMode } from 'monaco-graphql/initializeMode';
 import type { MonacoGraphQLInitializeConfig } from 'monaco-graphql';
-import { buildClientSchema, parse, Kind } from 'graphql';
+import { buildClientSchema, parse, Kind, getNamedType, isObjectType, isInterfaceType } from 'graphql';
 import type { IntrospectionQuery, GraphQLSchema, SelectionSetNode, ASTNode } from 'graphql';
 import { getAutocompleteSuggestions, Position as GQLPosition } from 'graphql-language-service';
 import type * as Monaco from 'monaco-editor';
@@ -95,6 +95,33 @@ function usedFieldsAtCursor(document: string, line: number, column: number): Set
   }
 }
 
+// Given a detail string like "EventConnection", "[Event!]!", or "field: Type",
+// extract the base named type and return a snippet insert text if the type has
+// sub-fields. Returns null for scalars/enums where no selection set is needed.
+function buildInsertText(schema: GraphQLSchema, label: string, detail: string | undefined): string | null {
+  if (!detail) return null;
+  // detail may be "TypeName" or "fieldName: TypeName"
+  const typeStr = detail.includes(':') ? detail.split(':').slice(1).join(':') : detail;
+  const baseTypeName = typeStr.replace(/[^a-zA-Z0-9_]/g, '');
+  if (!baseTypeName) return null;
+
+  const type = schema.getType(baseTypeName);
+  if (!type || (!isObjectType(type) && !isInterfaceType(type))) return null;
+
+  // Relay connection: has edges field whose named type has a node field
+  const fields = type.getFields();
+  if ('edges' in fields) {
+    const edgesNamed = getNamedType(fields.edges.type);
+    if (edgesNamed && (isObjectType(edgesNamed) || isInterfaceType(edgesNamed))) {
+      if ('node' in edgesNamed.getFields()) {
+        return `${label} {\n\tedges {\n\t\tnode {\n\t\t\t$0\n\t\t}\n\t}\n}`;
+      }
+    }
+  }
+
+  return `${label} {\n\t$0\n}`;
+}
+
 function registerCompletionProvider(schema: GraphQLSchema): void {
   if (!monaco) return;
   completionDisposable?.dispose();
@@ -111,19 +138,25 @@ function registerCompletionProvider(schema: GraphQLSchema): void {
         const filtered = used.size > 0 ? items.filter((e) => !used.has(e.label)) : items;
         return {
           incomplete: true,
-          suggestions: filtered.map((entry) => ({
-            label: entry.label,
-            kind: entry.kind as unknown as Monaco.languages.CompletionItemKind,
-            detail: entry.detail ?? '',
-            documentation: entry.documentation
-              ? { value: entry.documentation as string }
-              : undefined,
-            insertText: entry.insertText ?? entry.label,
-            sortText: entry.sortText,
-            filterText: entry.filterText ?? entry.label,
-            // Monaco fills in the replacement range from the word at cursor when undefined.
-            range: undefined as unknown as Monaco.IRange,
-          })),
+          suggestions: filtered.map((entry) => {
+            const snippet = buildInsertText(schema, entry.label, entry.detail ?? undefined);
+            return {
+              label: entry.label,
+              kind: entry.kind as unknown as Monaco.languages.CompletionItemKind,
+              detail: entry.detail ?? '',
+              documentation: entry.documentation
+                ? { value: entry.documentation as string }
+                : undefined,
+              insertText: snippet ?? entry.insertText ?? entry.label,
+              insertTextRules: snippet
+                ? m.languages.CompletionItemInsertTextRule.InsertAsSnippet
+                : undefined,
+              sortText: entry.sortText,
+              filterText: entry.filterText ?? entry.label,
+              // Monaco fills in the replacement range from the word at cursor when undefined.
+              range: undefined as unknown as Monaco.IRange,
+            };
+          }),
         };
       } catch {
         return { suggestions: [] };
