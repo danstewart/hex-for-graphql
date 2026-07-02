@@ -1,4 +1,4 @@
-import { Component, useEffect, useState, useCallback } from 'react';
+import { Component, useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from './store';
 import { loadSettings, loadOperations, loadEditorContent } from './lib/db';
@@ -60,9 +60,37 @@ function AppInner() {
 
   // Pane sizes (px)
   const [sidebarWidth, setSidebarWidth] = useState(192);
-  const [responseWidth, setResponseWidth] = useState(400);
   const [bottomHeight, setBottomHeight] = useState(180);
   const [docWidth, setDocWidth] = useState(300);
+
+  // Request/response split tracked as a fraction so it stays proportional
+  // when the container resizes (e.g. docs panel opens/closes).
+  const centerRef = useRef<HTMLDivElement>(null);
+  const [centerWidth, setCenterWidth] = useState(0);
+  const [responseFraction, setResponseFraction] = useState(0.45);
+  const responseWidth = centerWidth > 0
+    ? Math.max(200, Math.min(800, Math.round(centerWidth * responseFraction)))
+    : 400;
+
+  useLayoutEffect(() => {
+    const el = centerRef.current;
+    if (!el) return;
+    setCenterWidth(el.clientWidth);
+    const ro = new ResizeObserver((entries) => setCenterWidth(entries[0].contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Synchronously snap centerWidth when docs panel opens/closes so responseWidth
+  // is correct on the very first paint after the transition.
+  useLayoutEffect(() => {
+    const el = centerRef.current;
+    if (el) setCenterWidth(el.clientWidth);
+  }, [docOpen]);
+
+  const handleResponseResize = useCallback((px: number) => {
+    if (centerWidth > 0) setResponseFraction(px / centerWidth);
+  }, [centerWidth]);
 
   useEffect(() => {
     async function boot() {
@@ -134,7 +162,7 @@ function AppInner() {
 
         <div className="flex flex-col flex-1 overflow-hidden min-w-0">
           {/* Request / Response panes */}
-          <div className="flex flex-1 overflow-hidden min-h-0">
+          <div ref={centerRef} className="flex flex-1 overflow-hidden min-h-0">
             <div className="flex-1 overflow-hidden min-w-0">
               {initialContent !== null ? (
                 <EditorPane
@@ -154,7 +182,7 @@ function AppInner() {
               size={responseWidth}
               min={200}
               max={800}
-              onResize={setResponseWidth}
+              onResize={handleResponseResize}
               reverse
             />
 

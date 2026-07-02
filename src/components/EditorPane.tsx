@@ -166,20 +166,27 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
   }
 
   return (
-    <MonacoEditor
-      path="gql-ed://operation.graphql"
-      height="100%"
-      defaultLanguage="graphql"
-      theme="vs-dark"
-      defaultValue=""
-      options={editorOptions}
-      onMount={handleMount}
-      onChange={handleChange}
-      loading={
-        <div className="h-full flex items-center justify-center text-gray-600 text-sm">
-          Loading editor…
-        </div>
-      }
-    />
+    <div className="flex flex-col h-full">
+      <div className="flex h-8 shrink-0 items-center px-4 bg-gray-800 border-b border-gray-700">
+        <span className="text-xs font-medium text-gray-400">Request</span>
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <MonacoEditor
+          path="gql-ed://operation.graphql"
+          height="100%"
+          defaultLanguage="graphql"
+          theme="vs-dark"
+          defaultValue=""
+          options={editorOptions}
+          onMount={handleMount}
+          onChange={handleChange}
+          loading={
+            <div className="h-full flex items-center justify-center text-gray-600 text-sm">
+              Loading editor…
+            </div>
+          }
+        />
+      </div>
+    </div>
   );
 }
