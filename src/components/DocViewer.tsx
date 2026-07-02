@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   isObjectType, isInputObjectType, isEnumType, isScalarType,
   isInterfaceType, isUnionType,
@@ -35,11 +35,19 @@ function fuzzyScore(query: string, text: string): number {
   return qi === q.length ? s : -1;
 }
 
-function TypeRef({ t }: { t: string }) {
-  return <span className="text-blue-400 font-mono text-[11px]">{t}</span>;
+function TypeRef({ t, onNavigate }: { t: string; onNavigate?: (name: string) => void }) {
+  const baseName = t.replace(/[\[\]!]/g, '');
+  return (
+    <span
+      className={`text-blue-400 font-mono text-[11px] ${onNavigate ? 'cursor-pointer hover:text-blue-300 hover:underline' : ''}`}
+      onClick={onNavigate ? (e) => { e.stopPropagation(); onNavigate(baseName); } : undefined}
+    >
+      {t}
+    </span>
+  );
 }
 
-function ArgList({ args }: { args: readonly GraphQLArgument[] }) {
+function ArgList({ args, onNavigate }: { args: readonly GraphQLArgument[]; onNavigate?: (name: string) => void }) {
   if (!args.length) return null;
   return (
     <div className="mt-1 pl-2 border-l border-gray-700">
@@ -48,7 +56,7 @@ function ArgList({ args }: { args: readonly GraphQLArgument[] }) {
         <div key={arg.name} className="mb-0.5">
           <span className="text-yellow-300 font-mono text-[11px]">{arg.name}</span>
           <span className="text-gray-600 text-[11px]">: </span>
-          <TypeRef t={arg.type.toString()} />
+          <TypeRef t={arg.type.toString()} onNavigate={onNavigate} />
           {arg.defaultValue !== undefined && (
             <span className="text-gray-500 text-[11px]"> = {JSON.stringify(arg.defaultValue)}</span>
           )}
@@ -69,9 +77,10 @@ interface FieldRowProps {
   indent: number;
   expanded: boolean;
   onToggle: () => void;
+  onNavigate?: (name: string) => void;
 }
 
-function FieldRow({ name, typeStr, description, args, indent, expanded, onToggle }: FieldRowProps) {
+function FieldRow({ name, typeStr, description, args, indent, expanded, onToggle, onNavigate }: FieldRowProps) {
   const hasDetail = !!(description || (args && args.length > 0));
   return (
     <>
@@ -85,12 +94,12 @@ function FieldRow({ name, typeStr, description, args, indent, expanded, onToggle
         </span>
         <span className="text-gray-200 font-mono">{name}</span>
         <span className="text-gray-600 mx-0.5">:</span>
-        <TypeRef t={typeStr} />
+        <TypeRef t={typeStr} onNavigate={onNavigate} />
       </button>
       {expanded && hasDetail && (
         <div className="pb-2 text-[11px]" style={{ paddingLeft: 8 + indent * 12 + 12 }}>
           {description && <p className="text-gray-400 leading-relaxed mb-1.5">{description}</p>}
-          {args && <ArgList args={args} />}
+          {args && <ArgList args={args} onNavigate={onNavigate} />}
         </div>
       )}
     </>
@@ -239,6 +248,38 @@ export function DocViewer() {
     };
   }, [schema]);
 
+  const navigateToType = useCallback((typeName: string) => {
+    if (!schema) return;
+    const type = schema.getType(typeName);
+    if (!type) return;
+
+    const keys: string[] = [];
+    if (isObjectType(type) || isInterfaceType(type)) {
+      keys.push(isInterfaceType(type) ? 's:Interfaces' : 's:Types', `t:${typeName}`);
+    } else if (isInputObjectType(type)) {
+      keys.push('s:Inputs', `it:${typeName}`);
+    } else if (isEnumType(type)) {
+      keys.push('s:Enums', `en:${typeName}`);
+    } else if (isUnionType(type)) {
+      keys.push('s:Unions', `u:${typeName}`);
+    } else if (isScalarType(type)) {
+      keys.push('s:Scalars');
+    } else {
+      return;
+    }
+
+    setSearch('');
+    setExpanded(prev => {
+      const next = new Set(prev);
+      keys.forEach(k => next.add(k));
+      return next;
+    });
+
+    setTimeout(() => {
+      document.getElementById(`doc-type-${typeName}`)?.scrollIntoView({ block: 'start' });
+    }, 30);
+  }, [schema]);
+
   function renderRootFields(type: GraphQLObjectType) {
     return Object.entries(type.getFields()).map(([fname, field]) => {
       const key = `f:${type.name}.${fname}`;
@@ -252,6 +293,7 @@ export function DocViewer() {
           indent={1}
           expanded={expanded.has(key)}
           onToggle={() => toggle(key)}
+          onNavigate={navigateToType}
         />
       );
     });
@@ -264,15 +306,17 @@ export function DocViewer() {
     const typeKey = `t:${typeName}`;
     const open = expanded.has(typeKey);
     return (
-      <div key={typeName}>
+      <div key={typeName} id={`doc-type-${typeName}`}>
         <button
           onClick={() => toggle(typeKey)}
-          className="w-full text-left flex items-center gap-1 py-[3px] hover:bg-gray-700/40 transition-colors text-[11px]"
+          className="w-full text-left flex items-start gap-1 py-[3px] hover:bg-gray-700/40 transition-colors text-[11px]"
           style={{ paddingLeft: 20 }}
         >
-          <span className="text-[9px] text-gray-600 w-2.5 text-center">{open ? '▼' : '▶'}</span>
-          <span className="text-green-300 font-mono">{typeName}</span>
-          {type.description && <span className="text-gray-600 truncate ml-1">{type.description}</span>}
+          <span className="text-[9px] text-gray-600 w-2.5 shrink-0 text-center mt-0.5">{open ? '▼' : '▶'}</span>
+          <div className="min-w-0">
+            <div className="text-green-300 font-mono">{typeName}</div>
+            {type.description && <div className="text-gray-500 text-[10px] truncate leading-relaxed">{type.description}</div>}
+          </div>
         </button>
         {open && Object.entries(type.getFields()).map(([fname, field]) => {
           const key = `f:${typeName}.${fname}`;
@@ -286,6 +330,7 @@ export function DocViewer() {
               indent={2}
               expanded={expanded.has(key)}
               onToggle={() => toggle(key)}
+              onNavigate={navigateToType}
             />
           );
         })}
@@ -300,15 +345,17 @@ export function DocViewer() {
     const typeKey = `it:${typeName}`;
     const open = expanded.has(typeKey);
     return (
-      <div key={typeName}>
+      <div key={typeName} id={`doc-type-${typeName}`}>
         <button
           onClick={() => toggle(typeKey)}
-          className="w-full text-left flex items-center gap-1 py-[3px] hover:bg-gray-700/40 transition-colors text-[11px]"
+          className="w-full text-left flex items-start gap-1 py-[3px] hover:bg-gray-700/40 transition-colors text-[11px]"
           style={{ paddingLeft: 20 }}
         >
-          <span className="text-[9px] text-gray-600 w-2.5 text-center">{open ? '▼' : '▶'}</span>
-          <span className="text-orange-300 font-mono">{typeName}</span>
-          {type.description && <span className="text-gray-600 truncate ml-1">{type.description}</span>}
+          <span className="text-[9px] text-gray-600 w-2.5 shrink-0 text-center mt-0.5">{open ? '▼' : '▶'}</span>
+          <div className="min-w-0">
+            <div className="text-orange-300 font-mono">{typeName}</div>
+            {type.description && <div className="text-gray-500 text-[10px] truncate leading-relaxed">{type.description}</div>}
+          </div>
         </button>
         {open && Object.entries(type.getFields()).map(([fname, field]) => {
           const key = `if:${typeName}.${fname}`;
@@ -321,6 +368,7 @@ export function DocViewer() {
               indent={2}
               expanded={expanded.has(key)}
               onToggle={() => toggle(key)}
+              onNavigate={navigateToType}
             />
           );
         })}
@@ -335,15 +383,17 @@ export function DocViewer() {
     const typeKey = `en:${typeName}`;
     const open = expanded.has(typeKey);
     return (
-      <div key={typeName}>
+      <div key={typeName} id={`doc-type-${typeName}`}>
         <button
           onClick={() => toggle(typeKey)}
-          className="w-full text-left flex items-center gap-1 py-[3px] hover:bg-gray-700/40 transition-colors text-[11px]"
+          className="w-full text-left flex items-start gap-1 py-[3px] hover:bg-gray-700/40 transition-colors text-[11px]"
           style={{ paddingLeft: 20 }}
         >
-          <span className="text-[9px] text-gray-600 w-2.5 text-center">{open ? '▼' : '▶'}</span>
-          <span className="text-purple-300 font-mono">{typeName}</span>
-          {type.description && <span className="text-gray-600 truncate ml-1">{type.description}</span>}
+          <span className="text-[9px] text-gray-600 w-2.5 shrink-0 text-center mt-0.5">{open ? '▼' : '▶'}</span>
+          <div className="min-w-0">
+            <div className="text-purple-300 font-mono">{typeName}</div>
+            {type.description && <div className="text-gray-500 text-[10px] truncate leading-relaxed">{type.description}</div>}
+          </div>
         </button>
         {open && type.getValues().map(val => (
           <div
@@ -427,7 +477,7 @@ export function DocViewer() {
                         {result.typeStr && (
                           <>
                             <span className="text-gray-600">:</span>
-                            <TypeRef t={result.typeStr} />
+                            <TypeRef t={result.typeStr} onNavigate={navigateToType} />
                           </>
                         )}
                       </div>
@@ -436,7 +486,7 @@ export function DocViewer() {
                           {result.description && (
                             <p className="text-gray-400 leading-relaxed mb-1.5">{result.description}</p>
                           )}
-                          {result.args && result.args.length > 0 && <ArgList args={result.args} />}
+                          {result.args && result.args.length > 0 && <ArgList args={result.args} onNavigate={navigateToType} />}
                         </div>
                       )}
                     </div>
@@ -514,20 +564,25 @@ export function DocViewer() {
                   const typeKey = `u:${n}`;
                   const open = expanded.has(typeKey);
                   return (
-                    <div key={n}>
+                    <div key={n} id={`doc-type-${n}`}>
                       <button
                         onClick={() => toggle(typeKey)}
-                        className="w-full text-left flex items-center gap-1 py-[3px] hover:bg-gray-700/40 transition-colors text-[11px]"
+                        className="w-full text-left flex items-start gap-1 py-[3px] hover:bg-gray-700/40 transition-colors text-[11px]"
                         style={{ paddingLeft: 20 }}
                       >
-                        <span className="text-[9px] text-gray-600 w-2.5 text-center">{open ? '▼' : '▶'}</span>
-                        <span className="text-pink-300 font-mono">{n}</span>
-                        {type.description && <span className="text-gray-600 truncate ml-1">{type.description}</span>}
+                        <span className="text-[9px] text-gray-600 w-2.5 shrink-0 text-center mt-0.5">{open ? '▼' : '▶'}</span>
+                        <div className="min-w-0">
+                          <div className="text-pink-300 font-mono">{n}</div>
+                          {type.description && <div className="text-gray-500 text-[10px] truncate leading-relaxed">{type.description}</div>}
+                        </div>
                       </button>
                       {open && type.getTypes().map(m => (
                         <div key={m.name} className="flex items-center gap-1 py-[3px] text-[11px]" style={{ paddingLeft: 32 }}>
                           <span className="text-gray-600 text-[9px] w-2.5 text-center">·</span>
-                          <span className="text-green-300 font-mono">{m.name}</span>
+                          <span
+                            className="text-green-300 font-mono cursor-pointer hover:text-green-200 hover:underline"
+                            onClick={() => navigateToType(m.name)}
+                          >{m.name}</span>
                         </div>
                       ))}
                     </div>
@@ -565,10 +620,10 @@ export function DocViewer() {
                 {categories.scalars.map(n => {
                   const type = schema.getType(n);
                   return (
-                    <div key={n} className="flex items-center gap-1 py-[3px] text-[11px]" style={{ paddingLeft: 20 }}>
+                    <div key={n} id={`doc-type-${n}`} className="flex items-center gap-1 py-[3px] text-[11px]" style={{ paddingLeft: 20 }}>
                       <span className="text-gray-600 text-[9px] w-2.5 text-center">·</span>
                       <span className="text-cyan-300 font-mono">{n}</span>
-                      {type?.description && <span className="text-gray-600 truncate">{type.description}</span>}
+                      {type?.description && <span className="text-gray-500 truncate ml-1">{type.description}</span>}
                     </div>
                   );
                 })}
