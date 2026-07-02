@@ -4,9 +4,9 @@ import type * as Monaco from 'monaco-editor';
 import { registerTheme, THEME_NAME } from '../lib/monacoTheme';
 import { useStore } from '../store';
 import { runOperation } from '../lib/actions';
-import { findOperationLine, findOperationAtLine, formatOperationAtLine } from '../lib/graphql';
+import { findOperationLine, findOperationAtLine, formatOperationAtLine, resolveDocTarget } from '../lib/graphql';
 import { saveEditorContent, renameOperationVariables } from '../lib/db';
-import { setMonacoInstance } from '../lib/schema';
+import { setMonacoInstance, getBuiltSchema } from '../lib/schema';
 
 interface Props {
   initialContent: string;
@@ -36,6 +36,8 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
   const contentRef = useRef(initialContent);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeOpRef = useRef<{ name: string | null; startLine: number | null }>({ name: null, startLine: null });
+  const modKeyRef = useRef(false);
+  const hoverDecorationsRef = useRef<string[]>([]);
 
   const operations = useStore((s) => s.operations);
   const setEditorContent = useStore((s) => s.setEditorContent);
@@ -43,6 +45,8 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
   const formatRequested = useStore((s) => s.formatRequested);
   const editorFont = useStore((s) => s.editorFont);
   const editorFontSize = useStore((s) => s.editorFontSize);
+  const setDocOpen = useStore((s) => s.setDocOpen);
+  const setDocTarget = useStore((s) => s.setDocTarget);
 
   const editorOptions = useMemo(() => ({
     ...BASE_EDITOR_OPTIONS,
@@ -115,6 +119,26 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
     onNavigateHandled();
   }, [navigateTo, onNavigateHandled, operations, setEditorContent]);
 
+  // Track ctrl/cmd key state so the mousemove handler in handleMount knows whether to
+  // show the "jump to docs" hover affordance; clear any leftover decoration on key-up.
+  useEffect(() => {
+    function onKeyChange(e: KeyboardEvent) {
+      const isMod = e.ctrlKey || e.metaKey;
+      if (modKeyRef.current === isMod) return;
+      modKeyRef.current = isMod;
+      if (!isMod) {
+        const editor = editorRef.current;
+        if (editor) hoverDecorationsRef.current = editor.deltaDecorations(hoverDecorationsRef.current, []);
+      }
+    }
+    window.addEventListener('keydown', onKeyChange);
+    window.addEventListener('keyup', onKeyChange);
+    return () => {
+      window.removeEventListener('keydown', onKeyChange);
+      window.removeEventListener('keyup', onKeyChange);
+    };
+  }, []);
+
   const handleBeforeMount: BeforeMount = (monaco) => {
     registerTheme(monaco);
   };
@@ -151,6 +175,46 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       const content = editor.getValue();
       const line = editor.getPosition()?.lineNumber ?? 1;
       void runOperation(content, line);
+    });
+
+    // Ctrl/Cmd+click a field or type name to jump to its entry in the docs panel.
+    editor.onMouseDown((e) => {
+      if (!(e.event.ctrlKey || e.event.metaKey)) return;
+      const position = e.target.position;
+      if (!position) return;
+      const schema = getBuiltSchema();
+      if (!schema) return;
+      const target = resolveDocTarget(schema, editor.getValue(), editor.getModel()!.getOffsetAt(position));
+      if (!target) return;
+      e.event.preventDefault();
+      setDocOpen(true);
+      setDocTarget(target);
+    });
+
+    // Underline the token under the cursor while ctrl/cmd is held, so the click target
+    // is discoverable — mirrors the "go to definition" hover affordance in code editors.
+    editor.onMouseMove((e) => {
+      if (!modKeyRef.current) return;
+      const position = e.target.position;
+      const model = editor.getModel();
+      const schema = getBuiltSchema();
+      const word = position ? model?.getWordAtPosition(position) : null;
+      const target = position && model && schema
+        ? resolveDocTarget(schema, editor.getValue(), model.getOffsetAt(position))
+        : null;
+      hoverDecorationsRef.current = editor.deltaDecorations(
+        hoverDecorationsRef.current,
+        target && word && position
+          ? [{
+              range: new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn),
+              options: { inlineClassName: 'hex-doc-link' },
+            }]
+          : [],
+      );
+    });
+
+    editor.onMouseLeave(() => {
+      hoverDecorationsRef.current = editor.deltaDecorations(hoverDecorationsRef.current, []);
     });
 
     // Update window title and variables pane when cursor moves to a different operation

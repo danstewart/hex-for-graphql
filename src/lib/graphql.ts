@@ -1,7 +1,59 @@
-import { parse, print, Kind, getIntrospectionQuery } from 'graphql';
-import type { OperationDefinitionNode, IntrospectionQuery } from 'graphql';
+import { parse, print, visit, visitWithTypeInfo, TypeInfo, Kind, getIntrospectionQuery } from 'graphql';
+import type { OperationDefinitionNode, IntrospectionQuery, GraphQLSchema } from 'graphql';
 import { invoke } from '@tauri-apps/api/core';
 import type { Operation } from '../store';
+
+export interface DocTarget {
+  typeName: string;
+  fieldName?: string;
+}
+
+// Resolves the schema type/field under a character offset in a GraphQL document, so a
+// ctrl/cmd+click in the editor can jump straight to that entry in the docs panel.
+// Field names resolve to their *parent* type (the type the field is defined on, not its
+// return type) — clicking `title` on a Film jumps to Film.title, not to String.
+export function resolveDocTarget(
+  schema: GraphQLSchema,
+  source: string,
+  offset: number,
+): DocTarget | null {
+  let ast;
+  try {
+    ast = parse(source, { noLocation: false });
+  } catch {
+    return null;
+  }
+
+  const typeInfo = new TypeInfo(schema);
+  let result: DocTarget | null = null;
+
+  const visitor = visitWithTypeInfo(typeInfo, {
+    Field: {
+      enter(node) {
+        const loc = node.name.loc;
+        if (loc && offset >= loc.start && offset <= loc.end) {
+          const parentType = typeInfo.getParentType();
+          if (parentType) result = { typeName: parentType.name, fieldName: node.name.value };
+        }
+      },
+    },
+    NamedType: {
+      enter(node) {
+        const loc = node.name.loc;
+        if (loc && offset >= loc.start && offset <= loc.end) {
+          result = { typeName: node.name.value };
+        }
+      },
+    },
+  });
+
+  try {
+    visit(ast, visitor);
+  } catch {
+    return null;
+  }
+  return result;
+}
 
 export function parseDocumentOperations(
   doc: string,

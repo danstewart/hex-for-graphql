@@ -48,3 +48,10 @@ html, body {
 .monaco-scrollable-element > .scrollbar.horizontal {
   height: 6px !important;
 }
+
+/* Ctrl/Cmd+click-to-docs affordance in the GraphQL editor */
+.hex-doc-link {
+  text-decoration: underline;
+  text-decoration-color: #a78bfa;
+  cursor: pointer;
+}

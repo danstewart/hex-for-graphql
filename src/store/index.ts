@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { DocTarget } from '../lib/graphql';
 
 export interface Operation {
   id: number;
@@ -43,6 +44,8 @@ interface AppState {
 
   // Doc viewer
   docOpen: boolean;
+  // Pending navigation request from the editor (ctrl/cmd+click) for DocViewer to consume.
+  docTarget: DocTarget | null;
 
   // Setters
   setEndpoint: (v: string) => void;
@@ -62,6 +65,7 @@ interface AppState {
   setSettingsOpen: (v: boolean) => void;
   setSchemaStatus: (status: 'none' | 'loading' | 'loaded' | 'error', error?: string) => void;
   setDocOpen: (v: boolean) => void;
+  setDocTarget: (v: DocTarget | null) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -82,6 +86,7 @@ export const useStore = create<AppState>((set) => ({
   schemaError: null,
   settingsOpen: false,
   docOpen: false,
+  docTarget: null,
 
   setEndpoint: (endpoint) => set({ endpoint }),
   setHeaders: (headers) => set({ headers }),
@@ -117,4 +122,5 @@ export const useStore = create<AppState>((set) => ({
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setSchemaStatus: (schemaStatus, error) => set({ schemaStatus, schemaError: error ?? null }),
   setDocOpen: (docOpen) => set({ docOpen }),
+  setDocTarget: (docTarget) => set({ docTarget }),
 }));

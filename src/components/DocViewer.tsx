@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { ChevronRight, ChevronDown, X } from 'lucide-react';
 import {
   isObjectType, isInputObjectType, isEnumType, isScalarType,
@@ -87,6 +87,7 @@ function ArgList({ args, onNavigate }: { args: readonly GraphQLArgument[]; onNav
 }
 
 interface FieldRowProps {
+  id?: string;
   name: string;
   typeStr: string;
   description?: string | null;
@@ -97,11 +98,12 @@ interface FieldRowProps {
   onNavigate?: (name: string) => void;
 }
 
-function FieldRow({ name, typeStr, description, args, indent, expanded, onToggle, onNavigate }: FieldRowProps) {
+function FieldRow({ id, name, typeStr, description, args, indent, expanded, onToggle, onNavigate }: FieldRowProps) {
   const hasDetail = !!(description || (args && args.length > 0));
   return (
     <>
       <button
+        id={id}
         onClick={hasDetail ? onToggle : undefined}
         className="w-full text-left flex items-center gap-1 py-[3px] hover:bg-navy-800/40 transition-colors text-[11px]"
         style={{ paddingLeft: 8 + indent * 12 }}
@@ -217,6 +219,8 @@ function buildSearchResults(schema: GraphQLSchema, query: string): SearchResult[
 export function DocViewer() {
   const schemaStatus = useStore((s) => s.schemaStatus);
   const setDocOpen = useStore((s) => s.setDocOpen);
+  const docTarget = useStore((s) => s.docTarget);
+  const setDocTarget = useStore((s) => s.setDocTarget);
 
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(['s:Query', 's:Mutation']));
@@ -263,25 +267,43 @@ export function DocViewer() {
     };
   }, [schema]);
 
-  const navigateToType = useCallback((typeName: string) => {
+  // Navigates to a type, or to a specific field within a type (including the Query/
+  // Mutation/Subscription root types, which aren't rendered under "Types" like everything
+  // else). Used both by in-panel links (TypeRef, etc. — typeName only) and by ctrl/cmd+click
+  // in the editor (typeName + fieldName), which arrives via the docTarget store field below.
+  const navigateToTarget = useCallback((typeName: string, fieldName?: string) => {
     if (!schema) return;
-    const type = schema.getType(typeName);
-    if (!type) return;
 
     const keys: string[] = [];
-    if (isObjectType(type) || isInterfaceType(type)) {
-      keys.push(isInterfaceType(type) ? 's:Interfaces' : 's:Types', `t:${typeName}`);
-    } else if (isInputObjectType(type)) {
-      keys.push('s:Inputs', `it:${typeName}`);
-    } else if (isEnumType(type)) {
-      keys.push('s:Enums', `en:${typeName}`);
-    } else if (isUnionType(type)) {
-      keys.push('s:Unions', `u:${typeName}`);
-    } else if (isScalarType(type)) {
-      keys.push('s:Scalars');
+    const rootSectionKey =
+      schema.getQueryType()?.name === typeName ? 's:Query'
+      : schema.getMutationType()?.name === typeName ? 's:Mutation'
+      : schema.getSubscriptionType()?.name === typeName ? 's:Subscription'
+      : null;
+
+    let scrollId: string;
+    if (rootSectionKey) {
+      keys.push(rootSectionKey);
+      scrollId = fieldName ? `doc-f:${typeName}.${fieldName}` : rootSectionKey;
     } else {
-      return;
+      const type = schema.getType(typeName);
+      if (!type) return;
+      if (isObjectType(type) || isInterfaceType(type)) {
+        keys.push(isInterfaceType(type) ? 's:Interfaces' : 's:Types', `t:${typeName}`);
+      } else if (isInputObjectType(type)) {
+        keys.push('s:Inputs', `it:${typeName}`);
+      } else if (isEnumType(type)) {
+        keys.push('s:Enums', `en:${typeName}`);
+      } else if (isUnionType(type)) {
+        keys.push('s:Unions', `u:${typeName}`);
+      } else if (isScalarType(type)) {
+        keys.push('s:Scalars');
+      } else {
+        return;
+      }
+      scrollId = fieldName ? `doc-f:${typeName}.${fieldName}` : `doc-type-${typeName}`;
     }
+    if (fieldName) keys.push(`f:${typeName}.${fieldName}`);
 
     setSearch('');
     setExpanded(prev => {
@@ -291,9 +313,16 @@ export function DocViewer() {
     });
 
     setTimeout(() => {
-      document.getElementById(`doc-type-${typeName}`)?.scrollIntoView({ block: 'start' });
+      document.getElementById(scrollId)?.scrollIntoView({ block: 'start' });
     }, 30);
   }, [schema]);
+
+  // Consume a pending ctrl/cmd+click navigation request from the editor.
+  useEffect(() => {
+    if (!docTarget || !schema) return;
+    navigateToTarget(docTarget.typeName, docTarget.fieldName);
+    setDocTarget(null);
+  }, [docTarget, schema, navigateToTarget, setDocTarget]);
 
   function renderRootFields(type: GraphQLObjectType) {
     return Object.entries(type.getFields()).map(([fname, field]) => {
@@ -301,6 +330,7 @@ export function DocViewer() {
       return (
         <FieldRow
           key={key}
+          id={`doc-${key}`}
           name={fname}
           typeStr={field.type.toString()}
           description={field.description}
@@ -308,7 +338,7 @@ export function DocViewer() {
           indent={1}
           expanded={expanded.has(key)}
           onToggle={() => toggle(key)}
-          onNavigate={navigateToType}
+          onNavigate={navigateToTarget}
         />
       );
     });
@@ -338,6 +368,7 @@ export function DocViewer() {
           return (
             <FieldRow
               key={key}
+              id={`doc-${key}`}
               name={fname}
               typeStr={field.type.toString()}
               description={field.description}
@@ -345,7 +376,7 @@ export function DocViewer() {
               indent={2}
               expanded={expanded.has(key)}
               onToggle={() => toggle(key)}
-              onNavigate={navigateToType}
+              onNavigate={navigateToTarget}
             />
           );
         })}
@@ -383,7 +414,7 @@ export function DocViewer() {
               indent={2}
               expanded={expanded.has(key)}
               onToggle={() => toggle(key)}
-              onNavigate={navigateToType}
+              onNavigate={navigateToTarget}
             />
           );
         })}
@@ -490,7 +521,7 @@ export function DocViewer() {
                         {result.typeStr && (
                           <>
                             <span className="text-slate-600">:</span>
-                            <TypeRef t={result.typeStr} onNavigate={navigateToType} />
+                            <TypeRef t={result.typeStr} onNavigate={navigateToTarget} />
                           </>
                         )}
                       </div>
@@ -499,7 +530,7 @@ export function DocViewer() {
                           {result.description && (
                             <p className="text-slate-400 leading-relaxed mb-1.5">{result.description}</p>
                           )}
-                          {result.args && result.args.length > 0 && <ArgList args={result.args} onNavigate={navigateToType} />}
+                          {result.args && result.args.length > 0 && <ArgList args={result.args} onNavigate={navigateToTarget} />}
                         </div>
                       )}
                     </div>
@@ -594,7 +625,7 @@ export function DocViewer() {
                           <ToggleIcon open={null} />
                           <span
                             className="text-green-300 font-mono cursor-pointer hover:text-green-200 hover:underline"
-                            onClick={() => navigateToType(m.name)}
+                            onClick={() => navigateToTarget(m.name)}
                           >{m.name}</span>
                         </div>
                       ))}
