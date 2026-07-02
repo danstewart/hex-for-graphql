@@ -108,7 +108,7 @@ function AppInner() {
         setInitialContent(content);
         void refreshSchema();
       } catch (err) {
-        console.error('[gql-ed] boot failed:', err);
+        console.error('[hex] boot failed:', err);
         setBootError(String(err));
         // Still show the editor — user can set endpoint via Settings
         setInitialContent('');

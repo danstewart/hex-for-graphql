@@ -117,8 +117,8 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
     editorRef.current = editor;
 
     const model = editor.getModel();
-    console.log('[gql-ed] EditorPane mounted, model URI:', model?.uri.toString(), 'language:', model?.getLanguageId());
-    console.log('[gql-ed] monaco.languages.graphql:', (monaco.languages as unknown as Record<string, unknown>)['graphql']);
+    console.log('[hex] EditorPane mounted, model URI:', model?.uri.toString(), 'language:', model?.getLanguageId());
+    console.log('[hex] monaco.languages.graphql:', (monaco.languages as unknown as Record<string, unknown>)['graphql']);
 
     // Give the schema module access to the Monaco instance so it can register
     // the in-process completion provider.
@@ -131,7 +131,7 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
 
     // ⌘↵ runs the operation at the cursor
     editor.addAction({
-      id: 'gql-ed.run',
+      id: 'hex.run',
       label: 'Run GraphQL Operation',
       keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
       run: (ed) => {
@@ -146,7 +146,7 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       const pos = editor.getPosition();
       if (!pos) return;
       const opName = findOperationAtLine(editor.getValue(), pos.lineNumber);
-      document.title = opName ? `gql-ed — ${opName}` : 'gql-ed';
+      document.title = opName ? `Hex — ${opName}` : 'Hex';
     });
 
     if (initialContent) {
@@ -173,7 +173,7 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       </div>
       <div className="flex-1 overflow-hidden">
         <MonacoEditor
-          path="gql-ed://operation.graphql"
+          path="hex://operation.graphql"
           height="100%"
           defaultLanguage="graphql"
           theme="vs-dark"

@@ -23,12 +23,12 @@ let completionDisposable: Monaco.IDisposable | null = null;
 
 export function initGraphQLMode(): GraphQLMode {
   if (!mode) {
-    console.log('[gql-ed] initGraphQLMode: initializing monaco-graphql mode');
+    console.log('[hex] initGraphQLMode: initializing monaco-graphql mode');
     // Disable worker-based completions; we use our own in-process provider instead
     // to avoid worker serialization/deserialization issues.
     const config: MonacoGraphQLInitializeConfig = { modeConfiguration: { completionItems: false } };
     mode = initializeMode(config);
-    console.log('[gql-ed] initGraphQLMode: mode initialized', mode);
+    console.log('[hex] initGraphQLMode: mode initialized', mode);
   }
   return mode;
 }
@@ -194,7 +194,7 @@ function registerCompletionProvider(schema: GraphQLSchema): void {
       }
     },
   });
-  console.log('[gql-ed] Completion provider registered for graphql language');
+  console.log('[hex] Completion provider registered for graphql language');
 }
 
 export function applyIntrospection(
@@ -202,31 +202,31 @@ export function applyIntrospection(
   introspectionJSON: IntrospectionQuery,
 ): void {
   if (!mode) {
-    console.warn('[gql-ed] applyIntrospection: mode not initialized, skipping');
+    console.warn('[hex] applyIntrospection: mode not initialized, skipping');
     return;
   }
-  console.log('[gql-ed] applyIntrospection: applying schema for', uri);
+  console.log('[hex] applyIntrospection: applying schema for', uri);
   // Update hover, diagnostics, and formatting (worker-based).
   mode.setSchemaConfig([{ uri, introspectionJSON, fileMatch: ['**'] }]);
-  console.log('[gql-ed] applyIntrospection: schema config set, schemas:', mode.schemas);
+  console.log('[hex] applyIntrospection: schema config set, schemas:', mode.schemas);
 }
 
 export async function refreshSchema(): Promise<void> {
   const { endpoint, headers, setSchemaStatus } = useStore.getState();
-  console.log('[gql-ed] refreshSchema: endpoint =', endpoint);
+  console.log('[hex] refreshSchema: endpoint =', endpoint);
   if (!endpoint) {
-    console.log('[gql-ed] refreshSchema: no endpoint, skipping');
+    console.log('[hex] refreshSchema: no endpoint, skipping');
     return;
   }
   setSchemaStatus('loading');
   try {
     const headersMap = Object.fromEntries(headers);
-    console.log('[gql-ed] refreshSchema: fetching introspection from', endpoint);
+    console.log('[hex] refreshSchema: fetching introspection from', endpoint);
     const introspection = await fetchIntrospection(endpoint, headersMap);
-    console.log('[gql-ed] refreshSchema: introspection fetched, keys =', Object.keys(introspection));
+    console.log('[hex] refreshSchema: introspection fetched, keys =', Object.keys(introspection));
 
     builtSchema = buildClientSchema(introspection);
-    console.log('[gql-ed] refreshSchema: schema built, types =', Object.keys(builtSchema.getTypeMap()).length);
+    console.log('[hex] refreshSchema: schema built, types =', Object.keys(builtSchema.getTypeMap()).length);
 
     // Update hover/diagnostics/formatting worker with the schema.
     applyIntrospection(endpoint, introspection);
@@ -234,9 +234,9 @@ export async function refreshSchema(): Promise<void> {
     registerCompletionProvider(builtSchema);
 
     setSchemaStatus('loaded');
-    console.log('[gql-ed] refreshSchema: schema applied');
+    console.log('[hex] refreshSchema: schema applied');
   } catch (err) {
-    console.error('[gql-ed] refreshSchema: FAILED', err);
+    console.error('[hex] refreshSchema: FAILED', err);
     setSchemaStatus('error', String(err));
   }
 }

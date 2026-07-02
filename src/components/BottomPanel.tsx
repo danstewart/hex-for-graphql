@@ -23,7 +23,7 @@ export function BottomPanel() {
       </div>
       <div className="flex-1 overflow-hidden">
         <MonacoEditor
-          path="gql-ed://variables"
+          path="hex://variables"
           height="100%"
           defaultLanguage="json"
           theme="vs-dark"

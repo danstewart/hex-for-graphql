@@ -1,12 +1,12 @@
 [package]
-name = "gql-ed"
+name = "hex"
 version = "0.1.0"
 description = "A native macOS GraphQL editor"
 authors = []
 edition = "2021"
 
 [lib]
-name = "gql_ed_lib"
+name = "hex_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
