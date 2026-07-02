@@ -1,7 +1,6 @@
 import { useStore } from '../store';
 import { refreshSchema } from '../lib/schema';
 
-
 const SCHEMA_STATUS_LABEL: Record<string, string> = {
   none: 'No Schema',
   loading: 'Loading…',
@@ -10,7 +9,7 @@ const SCHEMA_STATUS_LABEL: Record<string, string> = {
 };
 
 const SCHEMA_STATUS_CLASS: Record<string, string> = {
-  none: 'text-slate-500',
+  none: 'text-slate-600',
   loading: 'text-yellow-400',
   loaded: 'text-green-400',
   error: 'text-red-400',
@@ -27,34 +26,36 @@ export function Toolbar() {
   const setDocOpen = useStore((s) => s.setDocOpen);
 
   return (
-    <div className="flex items-center gap-2 px-3 h-10 bg-navy-900 border-b border-navy-700 shrink-0 select-none">
+    <div className="flex items-center gap-1.5 px-3 h-10 bg-navy-900 border-b border-navy-700 shrink-0 select-none">
       <button
         onClick={requestExecute}
         disabled={isExecuting}
-        className="flex items-center gap-1.5 px-3 py-1 rounded text-sm bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-40 font-medium transition-colors"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-40 transition-all hover:shadow-[0_0_14px_rgba(139,92,246,0.45)] disabled:shadow-none"
       >
-        <span>{isExecuting ? '…' : '▶'}</span>
+        <span className="text-[10px] leading-none">{isExecuting ? '●' : '▶'}</span>
         <span>Run</span>
-        <kbd className="text-[10px] opacity-50 font-sans">⌘↵</kbd>
+        <kbd className="text-[10px] opacity-40 font-sans tracking-tight">⌘↵</kbd>
       </button>
+
+      <div className="w-px h-4 bg-navy-700 mx-0.5" />
 
       <button
         onClick={requestFormat}
-        className="px-3 py-1 rounded text-sm bg-navy-800 hover:bg-navy-700 active:bg-navy-600 font-medium transition-colors"
+        className="px-2.5 py-1.5 rounded-md text-[13px] font-medium text-slate-400 hover:text-slate-200 hover:bg-navy-800 active:bg-navy-700 transition-colors"
       >
         Format
-        <kbd className="ml-1.5 text-[10px] opacity-50 font-sans">⇧⌥F</kbd>
+        <kbd className="ml-1.5 text-[10px] opacity-40 font-sans">⇧⌥F</kbd>
       </button>
 
       <button
         onClick={refreshSchema}
-        className="px-3 py-1 rounded text-sm bg-navy-800 hover:bg-navy-700 active:bg-navy-600 font-medium transition-colors"
+        className="px-2.5 py-1.5 rounded-md text-[13px] font-medium text-slate-400 hover:text-slate-200 hover:bg-navy-800 active:bg-navy-700 transition-colors"
         title={schemaError ?? undefined}
       >
         Refresh Schema
       </button>
 
-      <span className={`text-xs font-medium ${SCHEMA_STATUS_CLASS[schemaStatus]}`}>
+      <span className={`text-xs font-medium tabular-nums ${SCHEMA_STATUS_CLASS[schemaStatus]}`}>
         {SCHEMA_STATUS_LABEL[schemaStatus]}
       </span>
 
@@ -62,7 +63,11 @@ export function Toolbar() {
 
       <button
         onClick={() => setDocOpen(!docOpen)}
-        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${docOpen ? 'bg-violet-700 hover:bg-violet-600 text-white' : 'bg-navy-800 hover:bg-navy-700 text-slate-200'}`}
+        className={`px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
+          docOpen
+            ? 'bg-violet-600/30 text-violet-300 hover:bg-violet-600/40'
+            : 'text-slate-400 hover:text-slate-200 hover:bg-navy-800'
+        }`}
         title="Toggle documentation panel"
       >
         Docs
@@ -71,7 +76,7 @@ export function Toolbar() {
       <button
         onClick={() => setSettingsOpen(true)}
         title="Settings (⌘,)"
-        className="w-8 h-8 flex items-center justify-center rounded text-slate-400 hover:text-slate-100 hover:bg-navy-800 transition-colors text-base"
+        className="w-8 h-8 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-navy-800 transition-colors text-sm"
       >
         ⚙
       </button>

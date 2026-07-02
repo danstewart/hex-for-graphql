@@ -196,7 +196,7 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
   return (
     <div className="flex flex-col h-full">
       <div className="flex h-8 shrink-0 items-center px-4 bg-navy-900 border-b border-navy-700">
-        <span className="text-xs font-medium text-slate-400">Request</span>
+        <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500">Request</span>
       </div>
       <div className="flex-1 overflow-hidden">
         <MonacoEditor

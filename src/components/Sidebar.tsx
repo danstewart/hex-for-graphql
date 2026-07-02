@@ -65,9 +65,9 @@ export function Sidebar({ onNavigate }: Props) {
   const hasAny = operations.length > 0;
 
   return (
-    <div className="w-full h-full bg-navy-900 flex flex-col overflow-y-auto text-sm select-none">
+    <div className="w-full h-full bg-navy-900 flex flex-col overflow-y-auto text-[13px] select-none">
       {!hasAny && (
-        <p className="p-4 text-slate-500 text-xs leading-relaxed">
+        <p className="p-4 text-slate-600 text-xs leading-relaxed">
           Named operations appear here after you run them.
         </p>
       )}
@@ -77,7 +77,7 @@ export function Sidebar({ onNavigate }: Props) {
         if (entityMap.size === 0) return null;
         return (
           <div key={type} className="mt-1">
-            <div className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <div className="px-3 pt-3 pb-1 text-[9px] font-semibold uppercase tracking-widest text-slate-600">
               {LABELS[type]}
             </div>
             {[...entityMap.entries()].map(([entity, ops]) => {
@@ -87,7 +87,7 @@ export function Sidebar({ onNavigate }: Props) {
               <div key={entity}>
                 <button
                   onClick={() => toggleEntity(key)}
-                  className="w-full flex items-center gap-1 px-4 py-0.5 text-[11px] font-medium text-slate-400 hover:text-slate-300 transition-colors"
+                  className="w-full flex items-center gap-1.5 px-3 py-0.5 text-[11px] font-medium text-slate-500 hover:text-slate-300 transition-colors"
                 >
                   <span className="text-[9px] opacity-60">{isCollapsed ? '▶' : '▼'}</span>
                   {entity}
@@ -99,7 +99,7 @@ export function Sidebar({ onNavigate }: Props) {
                   >
                     <button
                       onClick={() => onNavigate(op.name)}
-                      className="flex-1 text-left pl-7 pr-2 py-1 text-slate-300 group-hover:text-slate-100 truncate min-w-0"
+                      className="flex-1 text-left pl-6 pr-2 py-1 text-[13px] text-slate-400 group-hover:text-slate-100 truncate min-w-0 transition-colors"
                       title={op.name}
                     >
                       {op.name}

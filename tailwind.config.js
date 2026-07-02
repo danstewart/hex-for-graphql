@@ -3,13 +3,16 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Geist', '-apple-system', 'system-ui', 'sans-serif'],
+      },
       colors: {
         navy: {
           950: '#06060f',
-          900: '#0c0c1d',
-          800: '#13132a',
-          700: '#1c1c38',
-          600: '#252550',
+          900: '#0d0d1f',
+          800: '#13132b',
+          700: '#1e1e3a',
+          600: '#28285a',
         },
       },
     },

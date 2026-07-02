@@ -25,9 +25,9 @@ export function ResponsePane() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex h-8 shrink-0 items-center px-4 bg-navy-900 border-b border-navy-700">
-        <span className="text-xs font-medium text-slate-400">
+        <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500">
           Response
-          {isExecuting && <span className="ml-1.5 text-violet-400">●</span>}
+          {isExecuting && <span className="ml-1.5 text-violet-400 animate-pulse">●</span>}
         </span>
       </div>
       <div className="flex-1 overflow-hidden">
