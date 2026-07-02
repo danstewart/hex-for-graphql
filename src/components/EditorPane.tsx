@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import MonacoEditor, { type OnMount } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor';
 import { useStore } from '../store';
@@ -13,9 +13,8 @@ interface Props {
   onNavigateHandled: () => void;
 }
 
-const EDITOR_OPTIONS: Monaco.editor.IStandaloneEditorConstructionOptions = {
+const BASE_EDITOR_OPTIONS: Monaco.editor.IStandaloneEditorConstructionOptions = {
   minimap: { enabled: false },
-  fontSize: 14,
   lineNumbers: 'on',
   scrollBeyondLastLine: false,
   wordWrap: 'off',
@@ -34,9 +33,18 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
   const contentRef = useRef(initialContent);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const operations = useStore((s) => s.operations);
   const setEditorContent = useStore((s) => s.setEditorContent);
   const executeRequested = useStore((s) => s.executeRequested);
   const formatRequested = useStore((s) => s.formatRequested);
+  const editorFont = useStore((s) => s.editorFont);
+  const editorFontSize = useStore((s) => s.editorFontSize);
+
+  const editorOptions = useMemo(() => ({
+    ...BASE_EDITOR_OPTIONS,
+    fontFamily: editorFont,
+    fontSize: editorFontSize,
+  }), [editorFont, editorFontSize]);
 
   // Run operation (triggered from toolbar or ⌘↵ outside the editor focus)
   useEffect(() => {
@@ -80,14 +88,28 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
     if (!navigateTo) return;
     const editor = editorRef.current;
     if (!editor) return;
-    const line = findOperationLine(editor.getValue(), navigateTo);
+    let line = findOperationLine(editor.getValue(), navigateTo);
+    if (line == null) {
+      const op = operations.find((o) => o.name === navigateTo);
+      if (op) {
+        const current = editor.getValue();
+        const trimmed = current.trimEnd();
+        const newContent = trimmed ? trimmed + '\n\n' + op.body : op.body;
+        editor.setValue(newContent);
+        contentRef.current = newContent;
+        setEditorContent(newContent);
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        saveTimer.current = setTimeout(() => { void saveEditorContent(newContent); }, 1000);
+        line = findOperationLine(newContent, navigateTo);
+      }
+    }
     if (line != null) {
       editor.revealLineInCenter(line);
       editor.setPosition({ lineNumber: line, column: 1 });
       editor.focus();
     }
     onNavigateHandled();
-  }, [navigateTo, onNavigateHandled]);
+  }, [navigateTo, onNavigateHandled, operations, setEditorContent]);
 
   const handleMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
@@ -149,7 +171,7 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       defaultLanguage="graphql"
       theme="vs-dark"
       defaultValue=""
-      options={EDITOR_OPTIONS}
+      options={editorOptions}
       onMount={handleMount}
       onChange={handleChange}
       loading={

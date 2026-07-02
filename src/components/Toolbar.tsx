@@ -1,6 +1,7 @@
 import { useStore } from '../store';
 import { refreshSchema } from '../lib/schema';
 
+
 const SCHEMA_STATUS_LABEL: Record<string, string> = {
   none: 'No Schema',
   loading: 'Loading…',
@@ -22,6 +23,8 @@ export function Toolbar() {
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   const schemaStatus = useStore((s) => s.schemaStatus);
   const schemaError = useStore((s) => s.schemaError);
+  const docOpen = useStore((s) => s.docOpen);
+  const setDocOpen = useStore((s) => s.setDocOpen);
 
   return (
     <div className="flex items-center gap-2 px-3 h-10 bg-gray-800 border-b border-gray-700 shrink-0 select-none">
@@ -56,6 +59,14 @@ export function Toolbar() {
       </span>
 
       <div className="flex-1" />
+
+      <button
+        onClick={() => setDocOpen(!docOpen)}
+        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${docOpen ? 'bg-indigo-700 hover:bg-indigo-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'}`}
+        title="Toggle documentation panel"
+      >
+        Docs
+      </button>
 
       <button
         onClick={() => setSettingsOpen(true)}

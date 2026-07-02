@@ -9,6 +9,7 @@ import { EditorPane } from './components/EditorPane';
 import { BottomPanel } from './components/BottomPanel';
 import { Resizer } from './components/Resizer';
 import { SettingsModal } from './components/SettingsModal';
+import { DocViewer } from './components/DocViewer';
 
 class ErrorBoundary extends Component<
   { children: ReactNode },
@@ -47,6 +48,9 @@ function AppInner() {
   const setHeaders = useStore((s) => s.setHeaders);
   const setOperations = useStore((s) => s.setOperations);
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
+  const setEditorFont = useStore((s) => s.setEditorFont);
+  const setEditorFontSize = useStore((s) => s.setEditorFontSize);
+  const docOpen = useStore((s) => s.docOpen);
 
   // null = still loading from DB; string (including '') = loaded
   const [initialContent, setInitialContent] = useState<string | null>(null);
@@ -56,6 +60,7 @@ function AppInner() {
   // Pane sizes (px)
   const [sidebarWidth, setSidebarWidth] = useState(192);
   const [bottomHeight, setBottomHeight] = useState(220);
+  const [docWidth, setDocWidth] = useState(300);
 
   useEffect(() => {
     async function boot() {
@@ -67,6 +72,8 @@ function AppInner() {
         ]);
         setEndpoint(settings.endpoint);
         setHeaders(settings.headers);
+        setEditorFont(settings.editorFont);
+        setEditorFontSize(settings.editorFontSize);
         setOperations(ops);
         setInitialContent(content);
         void refreshSchema();
@@ -78,7 +85,7 @@ function AppInner() {
       }
     }
     void boot();
-  }, [setEndpoint, setHeaders, setOperations]);
+  }, [setEndpoint, setHeaders, setOperations, setEditorFont, setEditorFontSize]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -123,7 +130,7 @@ function AppInner() {
           onResize={setSidebarWidth}
         />
 
-        <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex flex-col flex-1 overflow-hidden min-w-0">
           <div className="flex-1 overflow-hidden">
             {initialContent !== null ? (
               <EditorPane
@@ -151,6 +158,23 @@ function AppInner() {
             <BottomPanel />
           </div>
         </div>
+
+        {/* Doc viewer (right sidebar) */}
+        {docOpen && (
+          <>
+            <Resizer
+              axis="x"
+              size={docWidth}
+              min={200}
+              max={600}
+              onResize={setDocWidth}
+              reverse
+            />
+            <div style={{ width: docWidth, flexShrink: 0 }} className="overflow-hidden border-l border-gray-700">
+              <DocViewer />
+            </div>
+          </>
+        )}
       </div>
 
       <SettingsModal />

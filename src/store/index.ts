@@ -29,12 +29,19 @@ interface AppState {
   executeRequested: number;
   formatRequested: number;
 
+  // Editor appearance
+  editorFont: string;
+  editorFontSize: number;
+
   // Schema
   schemaStatus: 'none' | 'loading' | 'loaded' | 'error';
   schemaError: string | null;
 
   // Modals
   settingsOpen: boolean;
+
+  // Doc viewer
+  docOpen: boolean;
 
   // Setters
   setEndpoint: (v: string) => void;
@@ -47,8 +54,11 @@ interface AppState {
   setActiveBottomPanel: (v: 'variables' | 'response') => void;
   requestExecute: () => void;
   requestFormat: () => void;
+  setEditorFont: (v: string) => void;
+  setEditorFontSize: (v: number) => void;
   setSettingsOpen: (v: boolean) => void;
   setSchemaStatus: (status: 'none' | 'loading' | 'loaded' | 'error', error?: string) => void;
+  setDocOpen: (v: boolean) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -62,9 +72,12 @@ export const useStore = create<AppState>((set) => ({
   activeBottomPanel: 'variables',
   executeRequested: 0,
   formatRequested: 0,
+  editorFont: 'Monaco, monospace',
+  editorFontSize: 14,
   schemaStatus: 'none',
   schemaError: null,
   settingsOpen: false,
+  docOpen: false,
 
   setEndpoint: (endpoint) => set({ endpoint }),
   setHeaders: (headers) => set({ headers }),
@@ -76,6 +89,9 @@ export const useStore = create<AppState>((set) => ({
   setActiveBottomPanel: (activeBottomPanel) => set({ activeBottomPanel }),
   requestExecute: () => set((s) => ({ executeRequested: s.executeRequested + 1 })),
   requestFormat: () => set((s) => ({ formatRequested: s.formatRequested + 1 })),
+  setEditorFont: (editorFont) => set({ editorFont }),
+  setEditorFontSize: (editorFontSize) => set({ editorFontSize }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setSchemaStatus: (schemaStatus, error) => set({ schemaStatus, schemaError: error ?? null }),
+  setDocOpen: (docOpen) => set({ docOpen }),
 }));

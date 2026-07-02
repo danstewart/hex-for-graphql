@@ -41,6 +41,8 @@ async function migrate(conn: Database): Promise<void> {
 export async function loadSettings(): Promise<{
   endpoint: string;
   headers: [string, string][];
+  editorFont: string;
+  editorFontSize: number;
 }> {
   const conn = await getDb();
   const rows = await conn.select<{ key: string; value: string }[]>(
@@ -51,22 +53,33 @@ export async function loadSettings(): Promise<{
   try {
     headers = JSON.parse(map['headers'] ?? '[]');
   } catch {}
-  return { endpoint: map['endpoint'] ?? '', headers };
+  return {
+    endpoint: map['endpoint'] ?? '',
+    headers,
+    editorFont: map['editor_font'] ?? 'Monaco, monospace',
+    editorFontSize: parseInt(map['editor_font_size'] ?? '14', 10),
+  };
 }
 
 export async function saveSettings(
   endpoint: string,
   headers: [string, string][],
+  editorFont: string,
+  editorFontSize: number,
 ): Promise<void> {
   const conn = await getDb();
-  await conn.execute(
-    `INSERT OR REPLACE INTO settings (key, value) VALUES ('endpoint', ?)`,
-    [endpoint],
-  );
-  await conn.execute(
-    `INSERT OR REPLACE INTO settings (key, value) VALUES ('headers', ?)`,
-    [JSON.stringify(headers)],
-  );
+  const pairs: [string, string][] = [
+    ['endpoint', endpoint],
+    ['headers', JSON.stringify(headers)],
+    ['editor_font', editorFont],
+    ['editor_font_size', String(editorFontSize)],
+  ];
+  for (const [key, value] of pairs) {
+    await conn.execute(
+      `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
+      [key, value],
+    );
+  }
 }
 
 export async function loadOperations(): Promise<Operation[]> {

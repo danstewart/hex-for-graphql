@@ -12,6 +12,10 @@ type GraphQLMode = ReturnType<typeof initializeMode>;
 let mode: GraphQLMode | null = null;
 // Built schema stored in the main thread for in-process completions.
 let builtSchema: GraphQLSchema | null = null;
+
+export function getBuiltSchema(): GraphQLSchema | null {
+  return builtSchema;
+}
 // Monaco instance, set once the editor first mounts.
 let monaco: typeof Monaco | null = null;
 // Dispose handle for our custom completion provider.

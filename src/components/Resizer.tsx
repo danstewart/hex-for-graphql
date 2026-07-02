@@ -6,9 +6,11 @@ interface Props {
   min: number;
   max: number;
   onResize: (newSize: number) => void;
+  /** Reverse delta direction — use for right-side panels where dragging left should grow the pane */
+  reverse?: boolean;
 }
 
-export function Resizer({ axis, size, min, max, onResize }: Props) {
+export function Resizer({ axis, size, min, max, onResize, reverse }: Props) {
   const isX = axis === 'x';
 
   function handleMouseDown(e: React.MouseEvent) {
@@ -18,8 +20,8 @@ export function Resizer({ axis, size, min, max, onResize }: Props) {
 
     function onMove(ev: MouseEvent) {
       const pos = isX ? ev.clientX : ev.clientY;
-      // For x-axis: rightward = bigger sidebar. For y-axis: upward = bigger bottom panel.
-      const delta = isX ? pos - startPos : startPos - pos;
+      // For x-axis: rightward = bigger pane (unless reverse). For y-axis: upward = bigger bottom panel.
+      const delta = isX ? (reverse ? startPos - pos : pos - startPos) : startPos - pos;
       onResize(Math.max(min, Math.min(max, startSize + delta)));
     }
 
