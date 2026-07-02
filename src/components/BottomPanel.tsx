@@ -40,7 +40,7 @@ export function BottomPanel() {
       <div className="flex h-8 shrink-0 items-center px-4 bg-navy-900 border-b border-navy-700">
         <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500">
           {currentOperationName
-            ? <>Variables for <em className="normal-case tracking-normal font-medium text-slate-400 not-italic">&thinsp;{currentOperationName}</em></>
+            ? <>Variables for <span className="text-slate-600">{currentOperationName}</span></>
             : 'Variables'}
         </span>
       </div>
