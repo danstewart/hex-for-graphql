@@ -95,31 +95,61 @@ function usedFieldsAtCursor(document: string, line: number, column: number): Set
   }
 }
 
-// Given a detail string like "EventConnection", "[Event!]!", or "field: Type",
-// extract the base named type and return a snippet insert text if the type has
-// sub-fields. Returns null for scalars/enums where no selection set is needed.
-function buildInsertText(schema: GraphQLSchema, label: string, detail: string | undefined): string | null {
-  if (!detail) return null;
-  // detail may be "TypeName" or "fieldName: TypeName"
-  const typeStr = detail.includes(':') ? detail.split(':').slice(1).join(':') : detail;
+function resolveDocString(doc: unknown): string | null {
+  if (!doc) return null;
+  if (typeof doc === 'string') return doc || null;
+  if (typeof doc === 'object' && 'value' in (doc as object)) {
+    return (doc as { value: string }).value || null;
+  }
+  return null;
+}
+
+// Look up a field's description and snippet from the schema directly, since
+// graphql-language-service often leaves documentation empty for field completions.
+function getFieldInfo(
+  schema: GraphQLSchema,
+  label: string,
+  detail: string | undefined,
+): { snippet: string | null; description: string | null } {
+  // Extract base return type name from detail (e.g. "[EventConnection!]!" → "EventConnection")
+  const typeStr = detail?.includes(':') ? detail.split(':').slice(1).join(':') : (detail ?? '');
   const baseTypeName = typeStr.replace(/[^a-zA-Z0-9_]/g, '');
-  if (!baseTypeName) return null;
 
-  const type = schema.getType(baseTypeName);
-  if (!type || (!isObjectType(type) && !isInterfaceType(type))) return null;
+  // Search all object/interface types for a field named `label` to get its description.
+  // Prefer a hit where the field's return type matches the detail.
+  let description: string | null = null;
+  for (const type of Object.values(schema.getTypeMap())) {
+    if (!isObjectType(type) && !isInterfaceType(type)) continue;
+    const fields = type.getFields();
+    if (!(label in fields)) continue;
+    const field = fields[label];
+    if (!field.description) continue;
+    const fieldBase = getNamedType(field.type).name;
+    if (!baseTypeName || fieldBase === baseTypeName) {
+      description = field.description;
+      break;
+    }
+    if (!description) description = field.description;
+  }
 
-  // Relay connection: has edges field whose named type has a node field
-  const fields = type.getFields();
+  // Build a selection-set snippet based on the return type.
+  if (!baseTypeName) return { snippet: null, description };
+  const returnType = schema.getType(baseTypeName);
+  if (!returnType || (!isObjectType(returnType) && !isInterfaceType(returnType))) {
+    return { snippet: null, description };
+  }
+
+  const fields = returnType.getFields();
   if ('edges' in fields) {
     const edgesNamed = getNamedType(fields.edges.type);
     if (edgesNamed && (isObjectType(edgesNamed) || isInterfaceType(edgesNamed))) {
       if ('node' in edgesNamed.getFields()) {
-        return `${label} {\n\tedges {\n\t\tnode {\n\t\t\t$0\n\t\t}\n\t}\n}`;
+        return { snippet: `${label} {\n\tedges {\n\t\tnode {\n\t\t\t$0\n\t\t}\n\t}\n}`, description };
       }
     }
   }
 
-  return `${label} {\n\t$0\n}`;
+  return { snippet: `${label} {\n\t$0\n}`, description };
 }
 
 function registerCompletionProvider(schema: GraphQLSchema): void {
@@ -139,14 +169,15 @@ function registerCompletionProvider(schema: GraphQLSchema): void {
         return {
           incomplete: true,
           suggestions: filtered.map((entry) => {
-            const snippet = buildInsertText(schema, entry.label, entry.detail ?? undefined);
+            const { snippet, description } = getFieldInfo(schema, entry.label, entry.detail ?? undefined);
+            const docString = description ?? resolveDocString(entry.documentation);
             return {
-              label: entry.label,
+              label: docString
+                ? { label: entry.label, description: docString.split('\n')[0].slice(0, 120) }
+                : entry.label,
               kind: entry.kind as unknown as Monaco.languages.CompletionItemKind,
               detail: entry.detail ?? '',
-              documentation: entry.documentation
-                ? { value: entry.documentation as string }
-                : undefined,
+              documentation: docString ? { value: docString } : undefined,
               insertText: snippet ?? entry.insertText ?? entry.label,
               insertTextRules: snippet
                 ? m.languages.CompletionItemInsertTextRule.InsertAsSnippet

@@ -27,6 +27,7 @@ const BASE_EDITOR_OPTIONS: Monaco.editor.IStandaloneEditorConstructionOptions = 
   acceptSuggestionOnEnter: 'smart',
   suggestOnTriggerCharacters: true,
   scrollbar: { verticalScrollbarSize: 6, horizontalScrollbarSize: 6 },
+  fixedOverflowWidgets: true,
 };
 
 export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Props) {
