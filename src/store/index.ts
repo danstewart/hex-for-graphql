@@ -23,7 +23,6 @@ interface AppState {
   variablesContent: string;
   response: string | null;
   isExecuting: boolean;
-  activeBottomPanel: 'variables' | 'response';
 
   // Signals (incrementing counter pattern — avoids re-render storms from boolean flips)
   executeRequested: number;
@@ -51,7 +50,6 @@ interface AppState {
   setVariablesContent: (v: string) => void;
   setResponse: (v: string | null) => void;
   setIsExecuting: (v: boolean) => void;
-  setActiveBottomPanel: (v: 'variables' | 'response') => void;
   requestExecute: () => void;
   requestFormat: () => void;
   setEditorFont: (v: string) => void;
@@ -69,7 +67,6 @@ export const useStore = create<AppState>((set) => ({
   variablesContent: '{}',
   response: null,
   isExecuting: false,
-  activeBottomPanel: 'variables',
   executeRequested: 0,
   formatRequested: 0,
   editorFont: 'Monaco, monospace',
@@ -86,7 +83,6 @@ export const useStore = create<AppState>((set) => ({
   setVariablesContent: (variablesContent) => set({ variablesContent }),
   setResponse: (response) => set({ response }),
   setIsExecuting: (isExecuting) => set({ isExecuting }),
-  setActiveBottomPanel: (activeBottomPanel) => set({ activeBottomPanel }),
   requestExecute: () => set((s) => ({ executeRequested: s.executeRequested + 1 })),
   requestFormat: () => set((s) => ({ formatRequested: s.formatRequested + 1 })),
   setEditorFont: (editorFont) => set({ editorFont }),

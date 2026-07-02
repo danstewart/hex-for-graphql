@@ -7,6 +7,7 @@ import { Toolbar } from './components/Toolbar';
 import { Sidebar } from './components/Sidebar';
 import { EditorPane } from './components/EditorPane';
 import { BottomPanel } from './components/BottomPanel';
+import { ResponsePane } from './components/ResponsePane';
 import { Resizer } from './components/Resizer';
 import { SettingsModal } from './components/SettingsModal';
 import { DocViewer } from './components/DocViewer';
@@ -59,7 +60,8 @@ function AppInner() {
 
   // Pane sizes (px)
   const [sidebarWidth, setSidebarWidth] = useState(192);
-  const [bottomHeight, setBottomHeight] = useState(220);
+  const [responseWidth, setResponseWidth] = useState(400);
+  const [bottomHeight, setBottomHeight] = useState(180);
   const [docWidth, setDocWidth] = useState(300);
 
   useEffect(() => {
@@ -131,29 +133,45 @@ function AppInner() {
         />
 
         <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-          <div className="flex-1 overflow-hidden">
-            {initialContent !== null ? (
-              <EditorPane
-                initialContent={initialContent}
-                navigateTo={navigateTo}
-                onNavigateHandled={handleNavigateHandled}
-              />
-            ) : (
-              <div className="h-full flex items-center justify-center text-gray-600 text-sm">
-                Loading…
-              </div>
-            )}
+          {/* Request / Response panes */}
+          <div className="flex flex-1 overflow-hidden min-h-0">
+            <div className="flex-1 overflow-hidden min-w-0">
+              {initialContent !== null ? (
+                <EditorPane
+                  initialContent={initialContent}
+                  navigateTo={navigateTo}
+                  onNavigateHandled={handleNavigateHandled}
+                />
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-600 text-sm">
+                  Loading…
+                </div>
+              )}
+            </div>
+
+            <Resizer
+              axis="x"
+              size={responseWidth}
+              min={200}
+              max={800}
+              onResize={setResponseWidth}
+              reverse
+            />
+
+            <div style={{ width: responseWidth, flexShrink: 0 }} className="overflow-hidden border-l border-gray-700">
+              <ResponsePane />
+            </div>
           </div>
 
           <Resizer
             axis="y"
             size={bottomHeight}
-            min={80}
-            max={600}
+            min={60}
+            max={400}
             onResize={setBottomHeight}
           />
 
-          {/* Bottom panel with controlled height */}
+          {/* Variables panel */}
           <div style={{ height: bottomHeight, flexShrink: 0 }} className="border-t border-gray-700 overflow-hidden">
             <BottomPanel />
           </div>

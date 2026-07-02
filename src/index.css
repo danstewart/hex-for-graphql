@@ -1,3 +1,43 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Monaco editor scrollbars */
+.monaco-scrollable-element > .scrollbar > .slider {
+  border-radius: 3px !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.monaco-scrollable-element > .scrollbar > .slider:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
+.monaco-scrollable-element > .scrollbar.vertical {
+  width: 6px !important;
+}
+
+.monaco-scrollable-element > .scrollbar.horizontal {
+  height: 6px !important;
+}

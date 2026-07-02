@@ -14,10 +14,7 @@ export async function runOperation(
     setResponse,
     setIsExecuting,
     setOperations,
-    setActiveBottomPanel,
   } = useStore.getState();
-
-  setActiveBottomPanel('response');
 
   if (!endpoint) {
     setResponse(
