@@ -17,7 +17,10 @@ async fn execute_graphql(
     variables: Option<serde_json::Value>,
     operation_name: Option<String>,
 ) -> Result<serde_json::Value, String> {
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .user_agent(concat!("hex-graphql/", env!("CARGO_PKG_VERSION")))
+        .build()
+        .map_err(|e| e.to_string())?;
     let body = GraphQLRequest { query, variables, operation_name };
 
     let mut request = client.post(&url).json(&body);
@@ -26,7 +29,10 @@ async fn execute_graphql(
     }
 
     let response = request.send().await.map_err(|e| e.to_string())?;
-    let json: serde_json::Value = response.json().await.map_err(|e| e.to_string())?;
+    let status = response.status();
+    let text = response.text().await.map_err(|e| e.to_string())?;
+    let json: serde_json::Value = serde_json::from_str(&text)
+        .map_err(|e| format!("HTTP {} — {}\n\nRESPONSE_BODY\n{}", status.as_u16(), e, text))?;
     Ok(json)
 }
 

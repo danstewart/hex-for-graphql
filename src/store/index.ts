@@ -41,6 +41,8 @@ interface AppState {
 
   // Modals
   settingsOpen: boolean;
+  commandPaletteOpen: boolean;
+  errorModal: { title: string; detail: string; responseBody?: string } | null;
 
   // Doc viewer
   docOpen: boolean;
@@ -63,6 +65,8 @@ interface AppState {
   setEditorFont: (v: string) => void;
   setEditorFontSize: (v: number) => void;
   setSettingsOpen: (v: boolean) => void;
+  setCommandPaletteOpen: (v: boolean) => void;
+  setErrorModal: (v: { title: string; detail: string; responseBody?: string } | null) => void;
   setSchemaStatus: (status: 'none' | 'loading' | 'loaded' | 'error', error?: string) => void;
   setDocOpen: (v: boolean) => void;
   setDocTarget: (v: DocTarget | null) => void;
@@ -85,6 +89,8 @@ export const useStore = create<AppState>((set) => ({
   schemaStatus: 'none',
   schemaError: null,
   settingsOpen: false,
+  commandPaletteOpen: false,
+  errorModal: null,
   docOpen: false,
   docTarget: null,
 
@@ -120,6 +126,8 @@ export const useStore = create<AppState>((set) => ({
   setEditorFont: (editorFont) => set({ editorFont }),
   setEditorFontSize: (editorFontSize) => set({ editorFontSize }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
+  setCommandPaletteOpen: (commandPaletteOpen) => set({ commandPaletteOpen }),
+  setErrorModal: (errorModal) => set({ errorModal }),
   setSchemaStatus: (schemaStatus, error) => set({ schemaStatus, schemaError: error ?? null }),
   setDocOpen: (docOpen) => set({ docOpen }),
   setDocTarget: (docTarget) => set({ docTarget }),

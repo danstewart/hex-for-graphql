@@ -1,4 +1,4 @@
-import { Play, Loader2, Check, Settings as SettingsIcon } from 'lucide-react';
+import { Play, Loader2, Check, Search, Settings as SettingsIcon } from 'lucide-react';
 import { useStore } from '../store';
 import { refreshSchema } from '../lib/schema';
 
@@ -21,8 +21,10 @@ export function Toolbar() {
   const requestExecute = useStore((s) => s.requestExecute);
   const requestFormat = useStore((s) => s.requestFormat);
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
+  const setCommandPaletteOpen = useStore((s) => s.setCommandPaletteOpen);
   const schemaStatus = useStore((s) => s.schemaStatus);
   const schemaError = useStore((s) => s.schemaError);
+  const setErrorModal = useStore((s) => s.setErrorModal);
   const docOpen = useStore((s) => s.docOpen);
   const setDocOpen = useStore((s) => s.setDocOpen);
 
@@ -55,17 +57,33 @@ export function Toolbar() {
       <button
         onClick={refreshSchema}
         className="px-2.5 py-1.5 rounded-md text-[13px] font-medium text-slate-400 hover:text-slate-200 hover:bg-navy-800 active:bg-navy-700 transition-colors"
-        title={schemaError ?? undefined}
       >
         Refresh Schema
       </button>
 
-      <span className={`flex items-center gap-1 text-xs font-medium ${SCHEMA_STATUS_CLASS[schemaStatus]}`}>
-        {schemaStatus === 'loaded' && <Check size={12} />}
-        {SCHEMA_STATUS_LABEL[schemaStatus]}
-      </span>
+      {schemaStatus === 'error' ? (
+        <button
+          onClick={() => setErrorModal({ title: 'Schema Error', detail: schemaError ?? '' })}
+          className={`flex items-center gap-1 text-xs font-medium ${SCHEMA_STATUS_CLASS.error} hover:text-red-300 transition-colors`}
+        >
+          {SCHEMA_STATUS_LABEL.error}
+        </button>
+      ) : (
+        <span className={`flex items-center gap-1 text-xs font-medium ${SCHEMA_STATUS_CLASS[schemaStatus]}`}>
+          {schemaStatus === 'loaded' && <Check size={12} />}
+          {SCHEMA_STATUS_LABEL[schemaStatus]}
+        </span>
+      )}
 
       <div className="flex-1" />
+
+      <button
+        onClick={() => setCommandPaletteOpen(true)}
+        title="Command Palette (⌘K)"
+        className="w-8 h-8 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-navy-800 transition-colors"
+      >
+        <Search size={15} />
+      </button>
 
       <button
         onClick={() => setDocOpen(!docOpen)}

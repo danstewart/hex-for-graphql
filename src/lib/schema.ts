@@ -211,6 +211,10 @@ export function applyIntrospection(
   console.log('[hex] applyIntrospection: schema config set, schemas:', mode.schemas);
 }
 
+function tryPrettyJson(s: string): string {
+  try { return JSON.stringify(JSON.parse(s), null, 2); } catch { return s; }
+}
+
 export async function refreshSchema(): Promise<void> {
   const { endpoint, headers, setSchemaStatus } = useStore.getState();
   console.log('[hex] refreshSchema: endpoint =', endpoint);
@@ -237,6 +241,13 @@ export async function refreshSchema(): Promise<void> {
     console.log('[hex] refreshSchema: schema applied');
   } catch (err) {
     console.error('[hex] refreshSchema: FAILED', err);
-    setSchemaStatus('error', String(err));
+    const errStr = String(err);
+    const MARKER = '\n\nRESPONSE_BODY\n';
+    const markerIdx = errStr.indexOf(MARKER);
+    const detail = markerIdx >= 0 ? errStr.slice(0, markerIdx) : errStr;
+    const rawBody = markerIdx >= 0 ? errStr.slice(markerIdx + MARKER.length) : undefined;
+    const responseBody = rawBody !== undefined ? tryPrettyJson(rawBody) : undefined;
+    setSchemaStatus('error', detail);
+    useStore.getState().setErrorModal({ title: 'Schema Error', detail, responseBody });
   }
 }

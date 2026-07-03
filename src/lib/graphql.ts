@@ -1,5 +1,6 @@
 import { parse, print, visit, visitWithTypeInfo, TypeInfo, Kind, getIntrospectionQuery } from 'graphql';
-import type { OperationDefinitionNode, IntrospectionQuery, GraphQLSchema } from 'graphql';
+import type { OperationDefinitionNode, FragmentDefinitionNode, IntrospectionQuery, GraphQLSchema } from 'graphql';
+import { collectVariables, getVariablesJSONSchema } from 'graphql-language-service';
 import { invoke } from '@tauri-apps/api/core';
 import type { Operation } from '../store';
 
@@ -53,6 +54,41 @@ export function resolveDocTarget(
     return null;
   }
   return result;
+}
+
+// Builds a JSON Schema describing the variable shape a named operation expects, so the
+// Variables editor can validate input and offer autocomplete against it. Returns null if
+// the operation can't be found or declares no variables.
+export function getOperationVariablesSchema(
+  schema: GraphQLSchema,
+  documentSource: string,
+  operationName: string | null,
+): Record<string, unknown> | null {
+  let ast;
+  try {
+    ast = parse(documentSource, { noLocation: false });
+  } catch {
+    return null;
+  }
+
+  const opDef = ast.definitions.find(
+    (d): d is OperationDefinitionNode =>
+      d.kind === Kind.OPERATION_DEFINITION &&
+      (operationName ? d.name?.value === operationName : true),
+  );
+  if (!opDef || !opDef.variableDefinitions?.length) return null;
+
+  // collectVariables walks every operation in a document, so isolate this one (plus any
+  // fragments it might reference) to avoid pulling in variables from unrelated operations.
+  const fragmentDefs = ast.definitions.filter(
+    (d): d is FragmentDefinitionNode => d.kind === Kind.FRAGMENT_DEFINITION,
+  );
+  const variableToType = collectVariables(schema, {
+    kind: Kind.DOCUMENT,
+    definitions: [opDef, ...fragmentDefs],
+  });
+
+  return getVariablesJSONSchema(variableToType) as unknown as Record<string, unknown>;
 }
 
 export function parseDocumentOperations(

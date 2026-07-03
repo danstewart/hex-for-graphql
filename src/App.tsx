@@ -11,6 +11,8 @@ import { ResponsePane } from './components/ResponsePane';
 import { Resizer } from './components/Resizer';
 import { SettingsModal } from './components/SettingsModal';
 import { DocViewer } from './components/DocViewer';
+import { CommandPalette } from './components/CommandPalette';
+import { ErrorModal } from './components/ErrorModal';
 
 class ErrorBoundary extends Component<
   { children: ReactNode },
@@ -49,6 +51,9 @@ function AppInner() {
   const setHeaders = useStore((s) => s.setHeaders);
   const setOperations = useStore((s) => s.setOperations);
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
+  const setCommandPaletteOpen = useStore((s) => s.setCommandPaletteOpen);
+  const errorModal = useStore((s) => s.errorModal);
+  const setErrorModal = useStore((s) => s.setErrorModal);
   const setEditorFont = useStore((s) => s.setEditorFont);
   const setEditorFontSize = useStore((s) => s.setEditorFontSize);
   const setOperationVariables = useStore((s) => s.setOperationVariables);
@@ -125,11 +130,14 @@ function AppInner() {
       if ((e.metaKey || e.ctrlKey) && e.key === ',') {
         e.preventDefault();
         setSettingsOpen(true);
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen(true);
       }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [setSettingsOpen]);
+  }, [setSettingsOpen, setCommandPaletteOpen]);
 
   const handleNavigate = useCallback((name: string) => {
     setNavigateTo(name);
@@ -227,6 +235,23 @@ function AppInner() {
       </div>
 
       <SettingsModal />
+      <CommandPalette onNavigateOperation={handleNavigate} />
+      {errorModal && (
+        <ErrorModal
+          title={errorModal.title}
+          detail={errorModal.detail}
+          responseBody={errorModal.responseBody}
+          onClose={() => setErrorModal(null)}
+          actions={
+            <button
+              onClick={() => { setErrorModal(null); setSettingsOpen(true); }}
+              className="px-4 py-2 rounded-md text-sm bg-navy-800 hover:bg-navy-700 text-slate-300 transition-colors"
+            >
+              Open Settings
+            </button>
+          }
+        />
+      )}
     </div>
   );
 }

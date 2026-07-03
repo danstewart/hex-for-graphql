@@ -5,36 +5,11 @@ import {
   isInterfaceType, isUnionType,
 } from 'graphql';
 import type {
-  GraphQLSchema, GraphQLField, GraphQLArgument, GraphQLObjectType,
+  GraphQLField, GraphQLArgument, GraphQLObjectType,
 } from 'graphql';
 import { useStore } from '../store';
 import { getBuiltSchema } from '../lib/schema';
-
-const BUILTIN = new Set([
-  'String', 'Boolean', 'Int', 'Float', 'ID',
-  '__Schema', '__Type', '__TypeKind', '__Field', '__InputValue',
-  '__EnumValue', '__Directive', '__DirectiveLocation',
-]);
-
-function skipType(name: string) {
-  return name.startsWith('__') || BUILTIN.has(name);
-}
-
-function fuzzyScore(query: string, text: string): number {
-  const q = query.toLowerCase();
-  const t = text.toLowerCase();
-  if (t === q) return 1000;
-  if (t.startsWith(q)) return 800;
-  if (t.includes(q)) return 600;
-  let s = 0, qi = 0, prev = -2;
-  for (let i = 0; i < t.length && qi < q.length; i++) {
-    if (t[i] === q[qi]) {
-      s += i === prev + 1 ? 10 : 2;
-      prev = i; qi++;
-    }
-  }
-  return qi === q.length ? s : -1;
-}
+import { skipType, buildSchemaSearchResults as buildSearchResults } from '../lib/schemaSearch';
 
 /** Disclosure indicator shared by every collapsible row. `open === null` means "not collapsible". */
 function ToggleIcon({ open }: { open: boolean | null }) {
@@ -145,75 +120,6 @@ function Section({ label, count, expanded, onToggle, children }: SectionProps) {
       {expanded && <div>{children}</div>}
     </div>
   );
-}
-
-interface SearchResult {
-  key: string;
-  typeName: string;
-  fieldName?: string;
-  typeStr?: string;
-  description?: string | null;
-  args?: readonly GraphQLArgument[];
-  score: number;
-}
-
-function buildSearchResults(schema: GraphQLSchema, query: string): SearchResult[] {
-  const results: SearchResult[] = [];
-
-  for (const [name, type] of Object.entries(schema.getTypeMap())) {
-    if (skipType(name)) continue;
-    const ts = fuzzyScore(query, name);
-    if (ts > 0) {
-      results.push({ key: `t:${name}`, typeName: name, description: type.description, score: ts + 50 });
-    }
-    if (isObjectType(type) || isInterfaceType(type)) {
-      for (const [fname, field] of Object.entries(type.getFields())) {
-        const fs = fuzzyScore(query, fname);
-        const ds = field.description ? fuzzyScore(query, field.description) : -1;
-        const best = Math.max(fs, ds > 0 ? Math.floor(ds / 4) : -1);
-        if (best > 0) {
-          results.push({
-            key: `f:${name}.${fname}`,
-            typeName: name,
-            fieldName: fname,
-            typeStr: field.type.toString(),
-            description: field.description,
-            args: (field as GraphQLField<unknown, unknown>).args,
-            score: best,
-          });
-        }
-      }
-    } else if (isInputObjectType(type)) {
-      for (const [fname, field] of Object.entries(type.getFields())) {
-        const fs = fuzzyScore(query, fname);
-        if (fs > 0) {
-          results.push({
-            key: `if:${name}.${fname}`,
-            typeName: name,
-            fieldName: fname,
-            typeStr: field.type.toString(),
-            description: field.description,
-            score: fs,
-          });
-        }
-      }
-    } else if (isEnumType(type)) {
-      for (const val of type.getValues()) {
-        const vs = fuzzyScore(query, val.name);
-        if (vs > 0) {
-          results.push({
-            key: `ev:${name}.${val.name}`,
-            typeName: name,
-            fieldName: val.name,
-            description: val.description,
-            score: vs,
-          });
-        }
-      }
-    }
-  }
-
-  return results.filter(r => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 100);
 }
 
 export function DocViewer() {
