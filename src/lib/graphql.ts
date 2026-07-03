@@ -161,8 +161,16 @@ export function findOperationLine(doc: string, name: string): number | null {
         return d.loc.startToken.line;
       }
     }
-  } catch {}
-  return null;
+    return null;
+  } catch {
+    // Document has syntax errors — fall back to scanning for the operation header.
+    const re = new RegExp(`^\\s*(?:query|mutation|subscription)\\s+${name}[\\s({]`);
+    const lines = doc.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      if (re.test(lines[i])) return i + 1;
+    }
+    return null;
+  }
 }
 
 export async function executeGraphQL(

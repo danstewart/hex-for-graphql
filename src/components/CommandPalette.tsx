@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Search } from 'lucide-react';
+import { Search, BookOpen } from 'lucide-react';
 import { useStore } from '../store';
 import { getBuiltSchema } from '../lib/schema';
 import { buildSchemaSearchResults } from '../lib/schemaSearch';
@@ -12,6 +12,7 @@ interface PaletteItem {
   key: string;
   label: string;
   sublabel: string;
+  isDoc?: boolean;
   onSelect: () => void;
 }
 
@@ -59,6 +60,7 @@ export function CommandPalette({ onNavigateOperation }: Props) {
           key: `schema:${r.key}`,
           label: r.fieldName ? `${r.typeName}.${r.fieldName}` : r.typeName,
           sublabel: r.typeStr ?? 'type',
+          isDoc: true,
           onSelect: () => {
             setDocOpen(true);
             setDocTarget({ typeName: r.typeName, fieldName: r.fieldName });
@@ -122,11 +124,15 @@ export function CommandPalette({ onNavigateOperation }: Props) {
               key={item.key}
               onClick={item.onSelect}
               onMouseEnter={() => setSelected(i)}
-              className={`w-full flex items-center justify-between gap-3 px-3 py-2 text-left text-[13px] font-mono transition-colors ${
+              className={`w-full flex items-center gap-3 px-3 py-2 text-left text-[13px] font-mono transition-colors ${
                 i === selected ? 'bg-navy-800 text-slate-100' : 'text-slate-400'
               }`}
             >
-              <span className="truncate">{item.label}</span>
+              {item.isDoc
+                ? <BookOpen size={12} className="text-slate-600 shrink-0" />
+                : <span className="w-3 shrink-0" />
+              }
+              <span className="truncate flex-1">{item.label}</span>
               <span className="text-[11px] text-slate-600 shrink-0 font-sans">{item.sublabel}</span>
             </button>
           ))}

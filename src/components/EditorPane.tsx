@@ -160,6 +160,11 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       editor.trigger('keyboard', 'editor.action.triggerSuggest', {});
     });
 
+    // ⌘P opens the command palette.
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyP, () => {
+      useStore.getState().setCommandPaletteOpen(true);
+    });
+
     // ⌘↵ runs the operation at the cursor.
     // addCommand takes exclusive ownership of the keybinding, preventing Monaco's
     // built-in "insert line below" from firing first and moving the cursor.

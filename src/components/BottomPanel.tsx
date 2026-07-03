@@ -51,9 +51,12 @@ export function BottomPanel() {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
 
-  const handleMount: OnMount = (_editor, monaco) => {
+  const handleMount: OnMount = (editor, monaco) => {
     monacoRef.current = monaco;
     applyVariablesSchema(monaco);
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyP, () => {
+      useStore.getState().setCommandPaletteOpen(true);
+    });
   };
 
   // Recompute the variables schema whenever the operation's declared variables could have
