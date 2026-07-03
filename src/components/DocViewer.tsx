@@ -386,6 +386,9 @@ export function DocViewer() {
           onChange={e => setSearch(e.target.value)}
           placeholder="Search types & fields…"
           className="w-full bg-navy-800 border border-navy-700 rounded-md px-2 py-1 text-[12px] text-slate-200 placeholder-slate-500 outline-none focus:border-violet-500 transition-colors"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
         />
       </div>
 

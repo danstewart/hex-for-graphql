@@ -111,6 +111,9 @@ export function CommandPalette({ onNavigateOperation }: Props) {
             onKeyDown={handleKeyDown}
             placeholder="Jump to an operation, type, or field…"
             className="flex-1 bg-transparent text-sm text-slate-200 placeholder-slate-600 outline-none"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
           />
         </div>
         <div className="flex-1 overflow-y-auto py-1">
