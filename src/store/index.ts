@@ -39,6 +39,11 @@ interface AppState {
   schemaStatus: 'none' | 'loading' | 'loaded' | 'error';
   schemaError: string | null;
 
+  // Toasts
+  toasts: { id: number; message: string }[];
+  addToast: (message: string) => void;
+  dismissToast: (id: number) => void;
+
   // Modals
   settingsOpen: boolean;
   commandPaletteOpen: boolean;
@@ -88,6 +93,11 @@ export const useStore = create<AppState>((set) => ({
   editorFontSize: 14,
   schemaStatus: 'none',
   schemaError: null,
+  toasts: [],
+  addToast: (message) => set((s) => ({
+    toasts: [...s.toasts, { id: Date.now(), message }],
+  })),
+  dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
   settingsOpen: false,
   commandPaletteOpen: false,
   errorModal: null,

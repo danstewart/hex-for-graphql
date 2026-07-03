@@ -13,6 +13,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { DocViewer } from './components/DocViewer';
 import { CommandPalette } from './components/CommandPalette';
 import { ErrorModal } from './components/ErrorModal';
+import { Toaster } from './components/Toaster';
 
 class ErrorBoundary extends Component<
   { children: ReactNode },
@@ -100,27 +101,42 @@ function AppInner() {
 
   useEffect(() => {
     async function boot() {
-      try {
-        const [settings, ops, content, opVars] = await Promise.all([
-          loadSettings(),
-          loadOperations(),
-          loadEditorContent(),
-          loadAllOperationVariables(),
-        ]);
-        setEndpoint(settings.endpoint);
-        setHeaders(settings.headers);
-        setEditorFont(settings.editorFont);
-        setEditorFontSize(settings.editorFontSize);
-        setOperations(ops);
-        setOperationVariables(opVars);
-        setInitialContent(content);
-        void refreshSchema();
-      } catch (err) {
-        console.error('[hex] boot failed:', err);
-        setBootError(String(err));
-        // Still show the editor — user can set endpoint via Settings
-        setInitialContent('');
+      const [settingsResult, opsResult, contentResult, opVarsResult] = await Promise.allSettled([
+        loadSettings(),
+        loadOperations(),
+        loadEditorContent(),
+        loadAllOperationVariables(),
+      ]);
+
+      const failures: string[] = [];
+      const check = <T,>(result: PromiseSettledResult<T>, name: string, fallback: T): T => {
+        if (result.status === 'rejected') {
+          console.error(`[hex] boot: ${name} failed`, result.reason);
+          failures.push(name);
+          return fallback;
+        }
+        return result.value;
+      };
+
+      const defaultSettings = { endpoint: '', headers: [] as [string,string][], editorFont: 'Geist Mono, monospace', editorFontSize: 14 };
+      const settings = check(settingsResult, 'settings', defaultSettings);
+      const ops      = check(opsResult,      'operations', []);
+      const content  = check(contentResult,  'editor content', '');
+      const opVars   = check(opVarsResult,   'variables', {});
+
+      setEndpoint(settings.endpoint);
+      setHeaders(settings.headers);
+      setEditorFont(settings.editorFont);
+      setEditorFontSize(settings.editorFontSize);
+      setOperations(ops);
+      setOperationVariables(opVars);
+      setInitialContent(content);
+
+      if (failures.length > 0) {
+        setBootError(`Failed to load: ${failures.join(', ')}. These will not persist this session.`);
       }
+
+      void refreshSchema();
     }
     void boot();
   }, [setEndpoint, setHeaders, setOperations, setEditorFont, setEditorFontSize, setOperationVariables]);
@@ -236,6 +252,7 @@ function AppInner() {
 
       <SettingsModal />
       <CommandPalette onNavigateOperation={handleNavigate} />
+      <Toaster />
       {errorModal && (
         <ErrorModal
           title={errorModal.title}

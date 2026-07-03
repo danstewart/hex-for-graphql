@@ -28,7 +28,13 @@ async fn execute_graphql(
         request = request.header(key, value);
     }
 
-    let response = request.send().await.map_err(|e| e.to_string())?;
+    let response = request.send().await.map_err(|e| {
+        if e.is_builder() {
+            format!("Invalid URL: {}", url)
+        } else {
+            e.to_string()
+        }
+    })?;
     let status = response.status();
     let text = response.text().await.map_err(|e| e.to_string())?;
     let json: serde_json::Value = serde_json::from_str(&text)

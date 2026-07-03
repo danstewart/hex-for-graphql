@@ -92,7 +92,11 @@ export function SettingsModal() {
     setHeaders(cleanHeaders);
     setEditorFont(fontValue);
     setEditorFontSize(clampedSize);
-    await saveSettings(endpoint, cleanHeaders, fontValue, clampedSize);
+    try {
+      await saveSettings(endpoint, cleanHeaders, fontValue, clampedSize);
+    } catch (err) {
+      useStore.getState().addToast(`Settings saved in memory but failed to persist: ${String(err)}`);
+    }
     setSettingsOpen(false);
     void refreshSchema();
   }

@@ -41,7 +41,9 @@ export async function runOperation(
   let variables: unknown = {};
   try {
     variables = JSON.parse(variablesContent || '{}');
-  } catch {}
+  } catch {
+    useStore.getState().addToast('Variables contain invalid JSON — sending request with no variables.');
+  }
 
   setIsExecuting(true);
   try {
@@ -62,7 +64,11 @@ export async function runOperation(
 
   // Persist only the operation that was actually run.
   if (currentOp) {
-    await upsertOperation(currentOp);
-    setOperations(await loadOperations());
+    try {
+      await upsertOperation(currentOp);
+      setOperations(await loadOperations());
+    } catch (err) {
+      useStore.getState().addToast(`Failed to save operation "${currentOp.name}": ${String(err)}`);
+    }
   }
 }
