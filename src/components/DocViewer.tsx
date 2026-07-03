@@ -74,24 +74,26 @@ interface FieldRowProps {
 }
 
 function FieldRow({ id, name, typeStr, description, args, indent, expanded, onToggle, onNavigate }: FieldRowProps) {
-  const hasDetail = !!(description || (args && args.length > 0));
+  const hasArgs = !!(args && args.length > 0);
   return (
     <>
       <button
         id={id}
-        onClick={hasDetail ? onToggle : undefined}
+        onClick={hasArgs ? onToggle : undefined}
         className="w-full text-left flex items-center gap-1 py-[3px] hover:bg-navy-800/40 transition-colors text-[11px]"
         style={{ paddingLeft: 8 + indent * 12 }}
       >
-        <ToggleIcon open={hasDetail ? expanded : null} />
+        <ToggleIcon open={hasArgs ? expanded : null} />
         <span className="text-slate-200 font-mono">{name}</span>
         <span className="text-slate-600 mx-0.5">:</span>
         <TypeRef t={typeStr} onNavigate={onNavigate} />
       </button>
-      {expanded && hasDetail && (
+      {description && (
+        <p className="text-slate-500 text-[10px] leading-relaxed pb-1" style={{ paddingLeft: 8 + indent * 12 + 12 }}>{description}</p>
+      )}
+      {expanded && hasArgs && (
         <div className="pb-2 text-[11px]" style={{ paddingLeft: 8 + indent * 12 + 12 }}>
-          {description && <p className="text-slate-400 leading-relaxed mb-1.5">{description}</p>}
-          {args && <ArgList args={args} onNavigate={onNavigate} />}
+          <ArgList args={args!} onNavigate={onNavigate} />
         </div>
       )}
     </>
