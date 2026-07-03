@@ -199,7 +199,7 @@ export async function fetchIntrospection(
     throw new Error(`Introspection errors: ${JSON.stringify(result.errors)}`);
   }
   if (!result.data) {
-    throw new Error('Introspection returned no data');
+    throw new Error(`Introspection returned no data\n\nRESPONSE_BODY\n${JSON.stringify(result, null, 2)}`);
   }
   return result.data;
 }
