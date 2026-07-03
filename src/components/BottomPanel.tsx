@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 import MonacoEditor, { type BeforeMount, type OnMount } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor';
 import { useStore } from '../store';
-import { registerTheme, THEME_NAME } from '../lib/monacoTheme';
+import { registerAllThemes, MONACO_THEME_MAP } from '../lib/monacoTheme';
 import { saveOperationVariables } from '../lib/db';
 import { getOperationVariablesSchema } from '../lib/graphql';
 import { getBuiltSchema } from '../lib/schema';
@@ -38,7 +38,7 @@ const VARIABLES_OPTIONS = {
 };
 
 const handleBeforeMount: BeforeMount = (monaco) => {
-  registerTheme(monaco);
+  registerAllThemes(monaco);
 };
 
 export function BottomPanel() {
@@ -47,6 +47,7 @@ export function BottomPanel() {
   const currentOperationName = useStore((s) => s.currentOperationName);
   const editorContent = useStore((s) => s.editorContent);
   const schemaStatus = useStore((s) => s.schemaStatus);
+  const theme = useStore((s) => s.theme);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
 
@@ -88,7 +89,7 @@ export function BottomPanel() {
           path="hex://variables"
           height="100%"
           defaultLanguage="json"
-          theme={THEME_NAME}
+          theme={MONACO_THEME_MAP[theme] ?? 'hex-noir'}
           beforeMount={handleBeforeMount}
           onMount={handleMount}
           value={variablesContent}

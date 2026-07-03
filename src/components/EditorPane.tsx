@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo } from 'react';
 import MonacoEditor, { type OnMount, type BeforeMount } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor';
-import { registerTheme, THEME_NAME } from '../lib/monacoTheme';
+import { registerAllThemes, MONACO_THEME_MAP } from '../lib/monacoTheme';
 import { useStore } from '../store';
 import { runOperation } from '../lib/actions';
 import { findOperationLine, findOperationAtLine, formatOperationAtLine, resolveDocTarget } from '../lib/graphql';
@@ -45,6 +45,7 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
   const formatRequested = useStore((s) => s.formatRequested);
   const editorFont = useStore((s) => s.editorFont);
   const editorFontSize = useStore((s) => s.editorFontSize);
+  const theme = useStore((s) => s.theme);
   const setDocOpen = useStore((s) => s.setDocOpen);
   const setDocTarget = useStore((s) => s.setDocTarget);
 
@@ -140,7 +141,7 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
   }, []);
 
   const handleBeforeMount: BeforeMount = (monaco) => {
-    registerTheme(monaco);
+    registerAllThemes(monaco);
   };
 
   const handleMount: OnMount = (editor, monaco) => {
@@ -267,7 +268,7 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
           path="hex://operation.graphql"
           height="100%"
           defaultLanguage="graphql"
-          theme={THEME_NAME}
+          theme={MONACO_THEME_MAP[theme] ?? 'hex-noir'}
           defaultValue=""
           options={editorOptions}
           beforeMount={handleBeforeMount}

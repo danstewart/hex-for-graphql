@@ -1,8 +1,31 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { useStore } from '../store';
-import { saveSettings } from '../lib/db';
+import { saveSettings, saveTheme } from '../lib/db';
 import { refreshSchema } from '../lib/schema';
+
+const THEMES = [
+  {
+    id: 'noir',
+    label: 'Noir',
+    swatches: ['#06060f', '#0d0d1f', '#1e1e3a'],
+  },
+  {
+    id: 'graphite',
+    label: 'Graphite',
+    swatches: ['#0c0c0d', '#141415', '#2a2a2e'],
+  },
+  {
+    id: 'mocha',
+    label: 'Mocha',
+    swatches: ['#0e0c0a', '#1a1613', '#332b23'],
+  },
+  {
+    id: 'light',
+    label: 'Dawn',
+    swatches: ['#faf9f7', '#f3f0ec', '#d5cfc8'],
+  },
+];
 
 const FONT_CANDIDATES = [
   'Monaco',
@@ -67,6 +90,8 @@ export function SettingsModal() {
   const storeEditorFontSize = useStore((s) => s.editorFontSize);
   const setEditorFont = useStore((s) => s.setEditorFont);
   const setEditorFontSize = useStore((s) => s.setEditorFontSize);
+  const theme = useStore((s) => s.theme);
+  const setTheme = useStore((s) => s.setTheme);
 
   const [endpoint, setLocalEndpoint] = useState('');
   const [headers, setLocalHeaders] = useState<[string, string][]>([]);
@@ -119,6 +144,15 @@ export function SettingsModal() {
 
   function applyFontSuggestion(name: string) {
     setLocalEditorFont(`${name}, monospace`);
+  }
+
+  async function handleThemeChange(id: string) {
+    setTheme(id);
+    try {
+      await saveTheme(id);
+    } catch (err) {
+      useStore.getState().addToast(`Theme saved in memory but failed to persist: ${String(err)}`);
+    }
   }
 
   if (!settingsOpen) return null;
@@ -180,6 +214,41 @@ export function SettingsModal() {
         >
           + Add header
         </button>
+
+        {/* Theme */}
+        <div className="border-t border-navy-700 pt-5 mb-6">
+          <p className="text-xs text-slate-400 uppercase tracking-wider mb-3">Theme</p>
+          <div className="flex gap-3">
+            {THEMES.map((t) => {
+              const active = theme === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => handleThemeChange(t.id)}
+                  className={`flex flex-col items-center gap-2 p-2 rounded-lg border transition-colors ${
+                    active
+                      ? 'border-violet-500 bg-violet-600/10'
+                      : 'border-navy-700 hover:border-navy-600'
+                  }`}
+                >
+                  <div className="flex rounded overflow-hidden w-16 h-8 relative ring-1 ring-inset ring-white/10">
+                    {t.swatches.map((c) => (
+                      <div key={c} style={{ background: c }} className="flex-1" />
+                    ))}
+                    {active && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Check size={14} className="text-violet-400" />
+                      </div>
+                    )}
+                  </div>
+                  <span className={`text-xs ${active ? 'text-violet-400' : 'text-slate-500'}`}>
+                    {t.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Editor appearance */}
         <div className="border-t border-navy-700 pt-5 mb-6">

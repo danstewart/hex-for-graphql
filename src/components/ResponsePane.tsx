@@ -1,6 +1,6 @@
 import MonacoEditor, { type BeforeMount } from '@monaco-editor/react';
 import { useStore } from '../store';
-import { registerTheme, THEME_NAME } from '../lib/monacoTheme';
+import { registerAllThemes, MONACO_THEME_MAP } from '../lib/monacoTheme';
 
 const RESPONSE_OPTIONS = {
   minimap: { enabled: false },
@@ -15,12 +15,13 @@ const RESPONSE_OPTIONS = {
 };
 
 const handleBeforeMount: BeforeMount = (monaco) => {
-  registerTheme(monaco);
+  registerAllThemes(monaco);
 };
 
 export function ResponsePane() {
   const response = useStore((s) => s.response);
   const isExecuting = useStore((s) => s.isExecuting);
+  const theme = useStore((s) => s.theme);
 
   return (
     <div className="flex flex-col h-full">
@@ -37,7 +38,7 @@ export function ResponsePane() {
           path="hex://response"
           height="100%"
           defaultLanguage="json"
-          theme={THEME_NAME}
+          theme={MONACO_THEME_MAP[theme] ?? 'hex-noir'}
           beforeMount={handleBeforeMount}
           value={
             isExecuting

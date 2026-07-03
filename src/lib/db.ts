@@ -49,6 +49,7 @@ export async function loadSettings(): Promise<{
   headers: [string, string][];
   editorFont: string;
   editorFontSize: number;
+  theme: string;
 }> {
   const conn = await getDb();
   const rows = await conn.select<{ key: string; value: string }[]>(
@@ -64,6 +65,7 @@ export async function loadSettings(): Promise<{
     headers,
     editorFont: map['editor_font'] ?? 'Geist Mono, monospace',
     editorFontSize: parseInt(map['editor_font_size'] ?? '14', 10),
+    theme: map['theme'] ?? 'noir',
   };
 }
 
@@ -144,6 +146,14 @@ export async function saveOperationVariables(name: string, variables: string): P
   await conn.execute(
     `INSERT OR REPLACE INTO operation_variables (name, variables) VALUES (?, ?)`,
     [name, variables],
+  );
+}
+
+export async function saveTheme(theme: string): Promise<void> {
+  const conn = await getDb();
+  await conn.execute(
+    `INSERT OR REPLACE INTO settings (key, value) VALUES ('theme', ?)`,
+    [theme],
   );
 }
 

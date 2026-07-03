@@ -34,6 +34,7 @@ interface AppState {
   // Editor appearance
   editorFont: string;
   editorFontSize: number;
+  theme: string;
 
   // Schema
   schemaStatus: 'none' | 'loading' | 'loaded' | 'error';
@@ -69,6 +70,7 @@ interface AppState {
   requestFormat: () => void;
   setEditorFont: (v: string) => void;
   setEditorFontSize: (v: number) => void;
+  setTheme: (v: string) => void;
   setSettingsOpen: (v: boolean) => void;
   setCommandPaletteOpen: (v: boolean) => void;
   setErrorModal: (v: { title: string; detail: string; responseBody?: string } | null) => void;
@@ -91,6 +93,7 @@ export const useStore = create<AppState>((set) => ({
   formatRequested: 0,
   editorFont: 'Geist Mono, monospace',
   editorFontSize: 14,
+  theme: 'noir',
   schemaStatus: 'none',
   schemaError: null,
   toasts: [],
@@ -135,6 +138,7 @@ export const useStore = create<AppState>((set) => ({
   requestFormat: () => set((s) => ({ formatRequested: s.formatRequested + 1 })),
   setEditorFont: (editorFont) => set({ editorFont }),
   setEditorFontSize: (editorFontSize) => set({ editorFontSize }),
+  setTheme: (theme) => set({ theme }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setCommandPaletteOpen: (commandPaletteOpen) => set({ commandPaletteOpen }),
   setErrorModal: (errorModal) => set({ errorModal }),

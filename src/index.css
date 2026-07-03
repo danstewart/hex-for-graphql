@@ -2,6 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Themes ───────────────────────────────────────────────── */
+
+/* Noir (default) — deep blue-black */
+:root, [data-theme="noir"] {
+  --navy-950: #06060f;
+  --navy-900: #0d0d1f;
+  --navy-800: #13132b;
+  --navy-700: #1e1e3a;
+  --navy-600: #28285a;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+}
+
+/* Graphite — neutral dark grey */
+[data-theme="graphite"] {
+  --navy-950: #0c0c0d;
+  --navy-900: #141415;
+  --navy-800: #1e1e20;
+  --navy-700: #2a2a2e;
+  --navy-600: #39393f;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+}
+
+/* Mocha — warm brown */
+[data-theme="mocha"] {
+  --navy-950: #0e0c0a;
+  --navy-900: #1a1613;
+  --navy-800: #252019;
+  --navy-700: #332b23;
+  --navy-600: #473c30;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+}
+
+/* Dawn — warm light */
+[data-theme="light"] {
+  --navy-950: #faf9f7;
+  --navy-900: #f3f0ec;
+  --navy-800: #ece8e3;
+  --navy-700: #d5cfc8;
+  --navy-600: #b8b0a8;
+  --slate-100: #1c1917;
+  --slate-200: #292524;
+  --slate-300: #44403c;
+  --slate-400: #78716c;
+  --slate-500: #a8a29e;
+  --slate-600: #d6d3d1;
+}
+
+/* Hardcoded accent colours that need adjustment on light backgrounds */
+[data-theme="light"] .text-green-400  { color: #15803d; }
+[data-theme="light"] .text-yellow-400 { color: #a16207; }
+[data-theme="light"] .text-red-400    { color: #b91c1c; }
+[data-theme="light"] .text-red-300    { color: #dc2626; }
+[data-theme="light"] .text-violet-300 { color: #6d28d9; }
+[data-theme="light"] .text-violet-400 { color: #7c3aed; }
+
+/* Scrollbars — light theme needs dark-on-light */
+[data-theme="light"] ::-webkit-scrollbar-thumb       { background: rgba(0,0,0,0.15); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+[data-theme="light"] .monaco-scrollable-element > .scrollbar > .slider       { background: rgba(0,0,0,0.15) !important; }
+[data-theme="light"] .monaco-scrollable-element > .scrollbar > .slider:hover { background: rgba(0,0,0,0.25) !important; }
+
+/* Doc-link underline — keep readable on light bg */
+[data-theme="light"] .hex-doc-link { text-decoration-color: #6d28d9; }
+
 html, body {
   font-family: 'Geist', -apple-system, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;

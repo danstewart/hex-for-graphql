@@ -55,6 +55,8 @@ function AppInner() {
   const setCommandPaletteOpen = useStore((s) => s.setCommandPaletteOpen);
   const errorModal = useStore((s) => s.errorModal);
   const setErrorModal = useStore((s) => s.setErrorModal);
+  const theme = useStore((s) => s.theme);
+  const setTheme = useStore((s) => s.setTheme);
   const setEditorFont = useStore((s) => s.setEditorFont);
   const setEditorFontSize = useStore((s) => s.setEditorFontSize);
   const setOperationVariables = useStore((s) => s.setOperationVariables);
@@ -118,7 +120,7 @@ function AppInner() {
         return result.value;
       };
 
-      const defaultSettings = { endpoint: '', headers: [] as [string,string][], editorFont: 'Geist Mono, monospace', editorFontSize: 14 };
+      const defaultSettings = { endpoint: '', headers: [] as [string,string][], editorFont: 'Geist Mono, monospace', editorFontSize: 14, theme: 'noir' };
       const settings = check(settingsResult, 'settings', defaultSettings);
       const ops      = check(opsResult,      'operations', []);
       const content  = check(contentResult,  'editor content', '');
@@ -128,6 +130,7 @@ function AppInner() {
       setHeaders(settings.headers);
       setEditorFont(settings.editorFont);
       setEditorFontSize(settings.editorFontSize);
+      setTheme(settings.theme);
       setOperations(ops);
       setOperationVariables(opVars);
       setInitialContent(content);
@@ -139,7 +142,11 @@ function AppInner() {
       void refreshSchema();
     }
     void boot();
-  }, [setEndpoint, setHeaders, setOperations, setEditorFont, setEditorFontSize, setOperationVariables]);
+  }, [setEndpoint, setHeaders, setOperations, setEditorFont, setEditorFontSize, setOperationVariables, setTheme]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
