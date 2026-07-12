@@ -10,8 +10,11 @@ A desktop GraphQL client with an IDE-like editing experience.
 - **Saved operations** — operations are persisted and grouped by type in the sidebar
 - **Command palette** (Cmd+P) — quickly find saved operations or search the schema
 - **Variables panel** — per-operation variable storage with JSON editing
-- **Multiple themes** — Noir, Graphite, Mocha (dark), and Dawn (light)
-- **CORS-free requests** — GraphQL execution runs through the Tauri backend process
+
+## Screenshot
+
+<img width="2114" height="1215" alt="CleanShot 2026-07-12 at 16 47 08" src="https://github.com/user-attachments/assets/364397a1-bed5-4ed2-9679-e9a0cfa1c9dd" />
+
 
 ## Prerequisites
 
