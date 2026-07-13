@@ -1,7 +1,7 @@
 import { Component, useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from './store';
-import { loadSettings, loadOperations, loadEditorContent, loadAllOperationVariables } from './lib/db';
+import { loadSettings, loadOperations, loadEditorContent, loadAllOperationVariables, loadLayout, saveLayout } from './lib/db';
 import { refreshSchema } from './lib/schema';
 import { Toolbar } from './components/Toolbar';
 import { Sidebar } from './components/Sidebar';
@@ -58,19 +58,23 @@ function AppInner() {
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
   const setEditorFont = useStore((s) => s.setEditorFont);
-  const setEditorFontSize = useStore((s) => s.setEditorFontSize);
+  const setFontSize = useStore((s) => s.setFontSize);
   const setOperationVariables = useStore((s) => s.setOperationVariables);
   const docOpen = useStore((s) => s.docOpen);
+  const setDocOpen = useStore((s) => s.setDocOpen);
 
   // null = still loading from DB; string (including '') = loaded
   const [initialContent, setInitialContent] = useState<string | null>(null);
   const [bootError, setBootError] = useState<string | null>(null);
   const [navigateTo, setNavigateTo] = useState<string | null>(null);
 
-  // Pane sizes (px)
+  // Pane sizes (px) — hydrated from the DB once boot() resolves; see layoutLoadedRef below.
   const [sidebarWidth, setSidebarWidth] = useState(192);
   const [bottomHeight, setBottomHeight] = useState(180);
   const [docWidth, setDocWidth] = useState(300);
+  // Guards the layout-persistence effect from firing (and clobbering saved values)
+  // before the DB-loaded layout has actually been applied to state.
+  const layoutLoadedRef = useRef(false);
 
   // Request/response split tracked as a fraction so it stays proportional
   // when the container resizes (e.g. docs panel opens/closes).
@@ -103,11 +107,12 @@ function AppInner() {
 
   useEffect(() => {
     async function boot() {
-      const [settingsResult, opsResult, contentResult, opVarsResult] = await Promise.allSettled([
+      const [settingsResult, opsResult, contentResult, opVarsResult, layoutResult] = await Promise.allSettled([
         loadSettings(),
         loadOperations(),
         loadEditorContent(),
         loadAllOperationVariables(),
+        loadLayout(),
       ]);
 
       const failures: string[] = [];
@@ -120,20 +125,28 @@ function AppInner() {
         return result.value;
       };
 
-      const defaultSettings = { endpoint: '', headers: [] as [string,string][], editorFont: 'Geist Mono, monospace', editorFontSize: 14, theme: 'noir' };
+      const defaultSettings = { endpoint: '', headers: [] as [string,string][], editorFont: 'Geist Mono, monospace', fontSize: 'medium' as const, theme: 'noir' };
+      const defaultLayout = { sidebarWidth: 192, bottomHeight: 180, docWidth: 300, responseFraction: 0.45, docOpen: false };
       const settings = check(settingsResult, 'settings', defaultSettings);
       const ops      = check(opsResult,      'operations', []);
       const content  = check(contentResult,  'editor content', '');
       const opVars   = check(opVarsResult,   'variables', {});
+      const layout   = check(layoutResult,   'layout', defaultLayout);
 
       setEndpoint(settings.endpoint);
       setHeaders(settings.headers);
       setEditorFont(settings.editorFont);
-      setEditorFontSize(settings.editorFontSize);
+      setFontSize(settings.fontSize);
       setTheme(settings.theme);
       setOperations(ops);
       setOperationVariables(opVars);
       setInitialContent(content);
+      setSidebarWidth(layout.sidebarWidth);
+      setBottomHeight(layout.bottomHeight);
+      setDocWidth(layout.docWidth);
+      setResponseFraction(layout.responseFraction);
+      setDocOpen(layout.docOpen);
+      layoutLoadedRef.current = true;
 
       if (failures.length > 0) {
         setBootError(`Failed to load: ${failures.join(', ')}. These will not persist this session.`);
@@ -142,7 +155,18 @@ function AppInner() {
       void refreshSchema();
     }
     void boot();
-  }, [setEndpoint, setHeaders, setOperations, setEditorFont, setEditorFontSize, setOperationVariables, setTheme]);
+  }, [setEndpoint, setHeaders, setOperations, setEditorFont, setFontSize, setOperationVariables, setTheme, setDocOpen]);
+
+  // Persist pane sizes and doc-panel open state, debounced, once the initial layout
+  // has actually been hydrated from the DB (otherwise the pre-load defaults would
+  // immediately overwrite whatever was saved before this run).
+  useEffect(() => {
+    if (!layoutLoadedRef.current) return;
+    const timer = setTimeout(() => {
+      void saveLayout({ sidebarWidth, bottomHeight, docWidth, responseFraction, docOpen });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [sidebarWidth, bottomHeight, docWidth, responseFraction, docOpen]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);

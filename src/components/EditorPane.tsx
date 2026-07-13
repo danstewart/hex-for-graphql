@@ -2,6 +2,7 @@ import { useEffect, useRef, useMemo } from 'react';
 import MonacoEditor, { type OnMount, type BeforeMount } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor';
 import { registerAllThemes, MONACO_THEME_MAP } from '../lib/monacoTheme';
+import { FONT_SIZE_PRESETS } from '../lib/uiScale';
 import { useStore } from '../store';
 import { runOperation } from '../lib/actions';
 import { findOperationLine, findOperationAtLine, formatOperationAtLine, resolveDocTarget } from '../lib/graphql';
@@ -33,6 +34,7 @@ const BASE_EDITOR_OPTIONS: Monaco.editor.IStandaloneEditorConstructionOptions = 
 
 export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Props) {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef(initialContent);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeOpRef = useRef<{ name: string | null; startLine: number | null }>({ name: null, startLine: null });
@@ -44,7 +46,8 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
   const executeRequested = useStore((s) => s.executeRequested);
   const formatRequested = useStore((s) => s.formatRequested);
   const editorFont = useStore((s) => s.editorFont);
-  const editorFontSize = useStore((s) => s.editorFontSize);
+  const fontSize = useStore((s) => s.fontSize);
+  const editorFontSize = FONT_SIZE_PRESETS[fontSize].editor;
   const theme = useStore((s) => s.theme);
   const setDocOpen = useStore((s) => s.setDocOpen);
   const setDocTarget = useStore((s) => s.setDocTarget);
@@ -138,6 +141,17 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       window.removeEventListener('keydown', onKeyChange);
       window.removeEventListener('keyup', onKeyChange);
     };
+  }, []);
+
+  // Explicitly re-layout on container resize rather than relying solely on Monaco's
+  // built-in `automaticLayout` polling — in the Tauri desktop webview that polling can
+  // miss rapid pane-resize drags, leaving the editor visually stuck at its old width.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => editorRef.current?.layout());
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   const handleBeforeMount: BeforeMount = (monaco) => {
@@ -268,7 +282,7 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       <div className="flex h-8 shrink-0 items-center px-4 bg-navy-900 border-b border-navy-700">
         <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500">Request</span>
       </div>
-      <div className="flex-1 overflow-hidden">
+      <div ref={containerRef} className="flex-1 overflow-hidden">
         <MonacoEditor
           path="hex://operation.graphql"
           height="100%"

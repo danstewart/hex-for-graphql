@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { DocTarget } from '../lib/graphql';
+import type { FontSizePreset } from '../lib/uiScale';
 
 export interface Operation {
   id: number;
@@ -33,7 +34,7 @@ interface AppState {
 
   // Editor appearance
   editorFont: string;
-  editorFontSize: number;
+  fontSize: FontSizePreset;
   theme: string;
 
   // Schema
@@ -69,7 +70,7 @@ interface AppState {
   requestExecute: () => void;
   requestFormat: () => void;
   setEditorFont: (v: string) => void;
-  setEditorFontSize: (v: number) => void;
+  setFontSize: (v: FontSizePreset) => void;
   setTheme: (v: string) => void;
   setSettingsOpen: (v: boolean) => void;
   setCommandPaletteOpen: (v: boolean) => void;
@@ -92,7 +93,7 @@ export const useStore = create<AppState>((set) => ({
   executeRequested: 0,
   formatRequested: 0,
   editorFont: 'Geist Mono, monospace',
-  editorFontSize: 14,
+  fontSize: 'medium',
   theme: 'noir',
   schemaStatus: 'none',
   schemaError: null,
@@ -137,7 +138,7 @@ export const useStore = create<AppState>((set) => ({
   requestExecute: () => set((s) => ({ executeRequested: s.executeRequested + 1 })),
   requestFormat: () => set((s) => ({ formatRequested: s.formatRequested + 1 })),
   setEditorFont: (editorFont) => set({ editorFont }),
-  setEditorFontSize: (editorFontSize) => set({ editorFontSize }),
+  setFontSize: (fontSize) => set({ fontSize }),
   setTheme: (theme) => set({ theme }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setCommandPaletteOpen: (commandPaletteOpen) => set({ commandPaletteOpen }),

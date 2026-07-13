@@ -1,6 +1,7 @@
 import { Play, Loader2, Check, Search, Settings as SettingsIcon } from 'lucide-react';
 import { useStore } from '../store';
 import { refreshSchema } from '../lib/schema';
+import { FONT_SIZE_PRESETS } from '../lib/uiScale';
 
 const SCHEMA_STATUS_LABEL: Record<string, string> = {
   none: 'No Schema',
@@ -27,13 +28,17 @@ export function Toolbar() {
   const setErrorModal = useStore((s) => s.setErrorModal);
   const docOpen = useStore((s) => s.docOpen);
   const setDocOpen = useStore((s) => s.setDocOpen);
+  const fontSize = useStore((s) => s.fontSize);
 
   return (
-    <div className="flex items-center gap-1.5 px-3 h-10 bg-navy-900 border-b border-navy-700 shrink-0 select-none">
+    <div
+      className="flex items-center gap-1.5 px-3 h-10 bg-navy-900 border-b border-navy-700 shrink-0 select-none"
+      style={{ zoom: FONT_SIZE_PRESETS[fontSize].uiZoom }}
+    >
       <button
         onClick={requestExecute}
         disabled={isExecuting}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-40 transition-all hover:shadow-[0_0_14px_rgba(139,92,246,0.45)] disabled:shadow-none"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium text-white bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-40 transition-all hover:shadow-[0_0_14px_rgba(139,92,246,0.45)] disabled:shadow-none"
       >
         {isExecuting ? (
           <Loader2 size={12} className="animate-spin" />

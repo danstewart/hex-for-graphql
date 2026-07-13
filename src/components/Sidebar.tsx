@@ -4,6 +4,7 @@ import { parse, Kind } from 'graphql';
 import { useStore } from '../store';
 import type { Operation } from '../store';
 import { deleteOperation, loadOperations } from '../lib/db';
+import { FONT_SIZE_PRESETS } from '../lib/uiScale';
 
 const LABELS: Record<Operation['type'], string> = {
   query: 'Query',
@@ -33,6 +34,7 @@ interface Props {
 export function Sidebar({ onNavigate }: Props) {
   const operations = useStore((s) => s.operations);
   const setOperations = useStore((s) => s.setOperations);
+  const fontSize = useStore((s) => s.fontSize);
 
   // Build: type → entity → operations[]
   const grouped: Record<Operation['type'], Map<string, Operation[]>> = {
@@ -66,7 +68,10 @@ export function Sidebar({ onNavigate }: Props) {
   const hasAny = operations.length > 0;
 
   return (
-    <div className="w-full h-full bg-navy-900 flex flex-col overflow-y-auto text-[13px] font-mono select-none">
+    <div
+      className="w-full h-full bg-navy-900 flex flex-col overflow-y-auto text-[13px] font-mono select-none"
+      style={{ zoom: FONT_SIZE_PRESETS[fontSize].uiZoom }}
+    >
       {!hasAny && (
         <p className="p-4 text-slate-600 text-xs leading-relaxed">
           Named operations appear here after you run them.

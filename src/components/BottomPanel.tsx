@@ -6,6 +6,7 @@ import { registerAllThemes, MONACO_THEME_MAP } from '../lib/monacoTheme';
 import { saveOperationVariables } from '../lib/db';
 import { getOperationVariablesSchema } from '../lib/graphql';
 import { getBuiltSchema } from '../lib/schema';
+import { FONT_SIZE_PRESETS } from '../lib/uiScale';
 
 const VARIABLES_SCHEMA_URI = 'hex://variables-schema.json';
 
@@ -48,6 +49,7 @@ export function BottomPanel() {
   const editorContent = useStore((s) => s.editorContent);
   const schemaStatus = useStore((s) => s.schemaStatus);
   const theme = useStore((s) => s.theme);
+  const fontSize = useStore((s) => s.fontSize);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
 
@@ -79,7 +81,7 @@ export function BottomPanel() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={{ zoom: FONT_SIZE_PRESETS[fontSize].uiZoom }}>
       <div className="flex h-8 shrink-0 items-center px-4 bg-navy-900 border-b border-navy-700">
         <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500">
           {currentOperationName

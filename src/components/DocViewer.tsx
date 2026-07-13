@@ -10,6 +10,7 @@ import type {
 import { useStore } from '../store';
 import { getBuiltSchema } from '../lib/schema';
 import { skipType, buildSchemaSearchResults as buildSearchResults } from '../lib/schemaSearch';
+import { FONT_SIZE_PRESETS } from '../lib/uiScale';
 
 /** Disclosure indicator shared by every collapsible row. `open === null` means "not collapsible". */
 function ToggleIcon({ open }: { open: boolean | null }) {
@@ -129,6 +130,7 @@ export function DocViewer() {
   const setDocOpen = useStore((s) => s.setDocOpen);
   const docTarget = useStore((s) => s.docTarget);
   const setDocTarget = useStore((s) => s.setDocTarget);
+  const fontSize = useStore((s) => s.fontSize);
 
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(['s:Query', 's:Mutation']));
@@ -365,7 +367,10 @@ export function DocViewer() {
   }
 
   return (
-    <div className="w-full h-full bg-navy-900 flex flex-col overflow-hidden text-sm select-none">
+    <div
+      className="w-full h-full bg-navy-900 flex flex-col overflow-hidden text-sm select-none"
+      style={{ zoom: FONT_SIZE_PRESETS[fontSize].uiZoom }}
+    >
       {/* Header */}
       <div className="flex items-center gap-2 px-3 h-10 bg-navy-900 border-b border-navy-700 shrink-0">
         <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex-1">Docs</span>

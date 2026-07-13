@@ -3,6 +3,7 @@ import { X, Check } from 'lucide-react';
 import { useStore } from '../store';
 import { saveSettings, saveTheme } from '../lib/db';
 import { refreshSchema } from '../lib/schema';
+import { FONT_SIZE_PRESETS, type FontSizePreset } from '../lib/uiScale';
 
 const THEMES = [
   {
@@ -87,16 +88,16 @@ export function SettingsModal() {
   const setEndpoint = useStore((s) => s.setEndpoint);
   const setHeaders = useStore((s) => s.setHeaders);
   const storeEditorFont = useStore((s) => s.editorFont);
-  const storeEditorFontSize = useStore((s) => s.editorFontSize);
+  const storeFontSize = useStore((s) => s.fontSize);
   const setEditorFont = useStore((s) => s.setEditorFont);
-  const setEditorFontSize = useStore((s) => s.setEditorFontSize);
+  const setFontSize = useStore((s) => s.setFontSize);
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
 
   const [endpoint, setLocalEndpoint] = useState('');
   const [headers, setLocalHeaders] = useState<[string, string][]>([]);
   const [editorFont, setLocalEditorFont] = useState('');
-  const [editorFontSize, setLocalEditorFontSize] = useState(14);
+  const [fontSize, setLocalFontSize] = useState<FontSizePreset>('medium');
   const [installedFonts, setInstalledFonts] = useState<string[]>([]);
 
   // Sync local state when modal opens
@@ -105,20 +106,19 @@ export function SettingsModal() {
     setLocalEndpoint(storeEndpoint);
     setLocalHeaders(storeHeaders.length > 0 ? storeHeaders : [['', '']]);
     setLocalEditorFont(storeEditorFont);
-    setLocalEditorFontSize(storeEditorFontSize);
+    setLocalFontSize(storeFontSize);
     setInstalledFonts(detectInstalledFonts(FONT_CANDIDATES));
-  }, [settingsOpen, storeEndpoint, storeHeaders, storeEditorFont, storeEditorFontSize]);
+  }, [settingsOpen, storeEndpoint, storeHeaders, storeEditorFont, storeFontSize]);
 
   async function handleSave() {
     const cleanHeaders = headers.filter(([k]) => k.trim() !== '');
-    const clampedSize = Math.max(8, Math.min(32, editorFontSize));
     const fontValue = editorFont.trim() || 'Geist Mono, monospace';
     setEndpoint(endpoint);
     setHeaders(cleanHeaders);
     setEditorFont(fontValue);
-    setEditorFontSize(clampedSize);
+    setFontSize(fontSize);
     try {
-      await saveSettings(endpoint, cleanHeaders, fontValue, clampedSize);
+      await saveSettings(endpoint, cleanHeaders, fontValue, fontSize);
     } catch (err) {
       useStore.getState().addToast(`Settings saved in memory but failed to persist: ${String(err)}`);
     }
@@ -281,23 +281,31 @@ export function SettingsModal() {
               )}
             </div>
 
-            <div className="w-24 shrink-0">
-              <label className="block mb-1 text-xs text-slate-500">Font Size</label>
-              <input
-                type="number"
-                value={editorFontSize}
-                onChange={(e) => setLocalEditorFontSize(Number(e.target.value))}
-                min={8}
-                max={32}
-                className="w-full bg-navy-950 border border-navy-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-violet-500"
-              />
+            <div className="w-52 shrink-0">
+              <label className="block mb-1 text-xs text-slate-500">UI Size</label>
+              <div className="flex gap-1 bg-navy-950 border border-navy-700 rounded-md p-1">
+                {(Object.keys(FONT_SIZE_PRESETS) as FontSizePreset[]).map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setLocalFontSize(preset)}
+                    className={`flex-1 rounded px-1.5 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
+                      fontSize === preset
+                        ? 'bg-violet-600 text-white'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-navy-800'
+                    }`}
+                  >
+                    {FONT_SIZE_PRESETS[preset].label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Preview */}
           <div
             className="mt-3 px-3 py-2 bg-navy-950 rounded-md border border-navy-700 text-slate-400"
-            style={{ fontFamily: editorFont || 'Geist Mono, monospace', fontSize: editorFontSize }}
+            style={{ fontFamily: editorFont || 'Geist Mono, monospace', fontSize: FONT_SIZE_PRESETS[fontSize].editor }}
           >
             query GetUser($id: ID!) &#123; user(id: $id) &#123; name &#125; &#125;
           </div>
@@ -312,7 +320,7 @@ export function SettingsModal() {
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 rounded-md text-sm bg-violet-600 hover:bg-violet-500 font-medium transition-colors"
+            className="px-4 py-2 rounded-md text-sm text-white bg-violet-600 hover:bg-violet-500 font-medium transition-colors"
           >
             Save &amp; Refresh Schema
           </button>
