@@ -56,6 +56,9 @@ interface AppState {
   // Pending navigation request from the editor (ctrl/cmd+click) for DocViewer to consume.
   docTarget: DocTarget | null;
 
+  // Sidebar
+  sidebarCollapsed: boolean;
+
   // Setters
   setEndpoint: (v: string) => void;
   setHeaders: (v: [string, string][]) => void;
@@ -78,6 +81,7 @@ interface AppState {
   setSchemaStatus: (status: 'none' | 'loading' | 'loaded' | 'error', error?: string) => void;
   setDocOpen: (v: boolean) => void;
   setDocTarget: (v: DocTarget | null) => void;
+  setSidebarCollapsed: (v: boolean) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -107,6 +111,7 @@ export const useStore = create<AppState>((set) => ({
   errorModal: null,
   docOpen: false,
   docTarget: null,
+  sidebarCollapsed: false,
 
   setEndpoint: (endpoint) => set({ endpoint }),
   setHeaders: (headers) => set({ headers }),
@@ -146,4 +151,5 @@ export const useStore = create<AppState>((set) => ({
   setSchemaStatus: (schemaStatus, error) => set({ schemaStatus, schemaError: error ?? null }),
   setDocOpen: (docOpen) => set({ docOpen }),
   setDocTarget: (docTarget) => set({ docTarget }),
+  setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
 }));

@@ -62,6 +62,8 @@ function AppInner() {
   const setOperationVariables = useStore((s) => s.setOperationVariables);
   const docOpen = useStore((s) => s.docOpen);
   const setDocOpen = useStore((s) => s.setDocOpen);
+  const sidebarCollapsed = useStore((s) => s.sidebarCollapsed);
+  const setSidebarCollapsed = useStore((s) => s.setSidebarCollapsed);
 
   // null = still loading from DB; string (including '') = loaded
   const [initialContent, setInitialContent] = useState<string | null>(null);
@@ -81,8 +83,14 @@ function AppInner() {
   const centerRef = useRef<HTMLDivElement>(null);
   const [centerWidth, setCenterWidth] = useState(0);
   const [responseFraction, setResponseFraction] = useState(0.45);
+  // A hardcoded response max (e.g. 800) put an effective floor under the editor's width
+  // equal to centerWidth - 800 — on a typical window that's a few hundred px the editor
+  // could never shrink past. Derive the cap from centerWidth instead so the editor can
+  // always be dragged down to EDITOR_MIN_WIDTH regardless of how wide the window is.
+  const EDITOR_MIN_WIDTH = 100;
+  const responseMax = centerWidth > 0 ? Math.max(200, centerWidth - EDITOR_MIN_WIDTH) : 800;
   const responseWidth = centerWidth > 0
-    ? Math.max(200, Math.min(800, Math.round(centerWidth * responseFraction)))
+    ? Math.max(200, Math.min(responseMax, Math.round(centerWidth * responseFraction)))
     : 400;
 
   useLayoutEffect(() => {
@@ -126,7 +134,7 @@ function AppInner() {
       };
 
       const defaultSettings = { endpoint: '', headers: [] as [string,string][], editorFont: 'Geist Mono, monospace', fontSize: 'medium' as const, theme: 'noir' };
-      const defaultLayout = { sidebarWidth: 192, bottomHeight: 180, docWidth: 300, responseFraction: 0.45, docOpen: false };
+      const defaultLayout = { sidebarWidth: 192, bottomHeight: 180, docWidth: 300, responseFraction: 0.45, docOpen: false, sidebarCollapsed: false };
       const settings = check(settingsResult, 'settings', defaultSettings);
       const ops      = check(opsResult,      'operations', []);
       const content  = check(contentResult,  'editor content', '');
@@ -146,6 +154,7 @@ function AppInner() {
       setDocWidth(layout.docWidth);
       setResponseFraction(layout.responseFraction);
       setDocOpen(layout.docOpen);
+      setSidebarCollapsed(layout.sidebarCollapsed);
       layoutLoadedRef.current = true;
 
       if (failures.length > 0) {
@@ -155,18 +164,18 @@ function AppInner() {
       void refreshSchema();
     }
     void boot();
-  }, [setEndpoint, setHeaders, setOperations, setEditorFont, setFontSize, setOperationVariables, setTheme, setDocOpen]);
+  }, [setEndpoint, setHeaders, setOperations, setEditorFont, setFontSize, setOperationVariables, setTheme, setDocOpen, setSidebarCollapsed]);
 
-  // Persist pane sizes and doc-panel open state, debounced, once the initial layout
-  // has actually been hydrated from the DB (otherwise the pre-load defaults would
-  // immediately overwrite whatever was saved before this run).
+  // Persist pane sizes, doc-panel open state, and sidebar collapsed state, debounced,
+  // once the initial layout has actually been hydrated from the DB (otherwise the
+  // pre-load defaults would immediately overwrite whatever was saved before this run).
   useEffect(() => {
     if (!layoutLoadedRef.current) return;
     const timer = setTimeout(() => {
-      void saveLayout({ sidebarWidth, bottomHeight, docWidth, responseFraction, docOpen });
+      void saveLayout({ sidebarWidth, bottomHeight, docWidth, responseFraction, docOpen, sidebarCollapsed });
     }, 500);
     return () => clearTimeout(timer);
-  }, [sidebarWidth, bottomHeight, docWidth, responseFraction, docOpen]);
+  }, [sidebarWidth, bottomHeight, docWidth, responseFraction, docOpen, sidebarCollapsed]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -206,17 +215,21 @@ function AppInner() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar with controlled width */}
-        <div style={{ width: sidebarWidth, flexShrink: 0 }} className="overflow-hidden border-r border-navy-700">
-          <Sidebar onNavigate={handleNavigate} />
-        </div>
+        {!sidebarCollapsed && (
+          <>
+            <div style={{ width: sidebarWidth, flexShrink: 0 }} className="overflow-hidden border-r border-navy-700">
+              <Sidebar onNavigate={handleNavigate} />
+            </div>
 
-        <Resizer
-          axis="x"
-          size={sidebarWidth}
-          min={120}
-          max={480}
-          onResize={setSidebarWidth}
-        />
+            <Resizer
+              axis="x"
+              size={sidebarWidth}
+              min={120}
+              max={480}
+              onResize={setSidebarWidth}
+            />
+          </>
+        )}
 
         <div className="flex flex-col flex-1 overflow-hidden min-w-0">
           {/* Request / Response panes */}
@@ -239,7 +252,7 @@ function AppInner() {
               axis="x"
               size={responseWidth}
               min={200}
-              max={800}
+              max={responseMax}
               onResize={handleResponseResize}
               reverse
             />

@@ -1,4 +1,4 @@
-import { Play, Loader2, Check, Search, Settings as SettingsIcon } from 'lucide-react';
+import { Play, Loader2, Check, Search, Settings as SettingsIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useStore } from '../store';
 import { refreshSchema } from '../lib/schema';
 import { FONT_SIZE_PRESETS } from '../lib/uiScale';
@@ -28,6 +28,8 @@ export function Toolbar() {
   const setErrorModal = useStore((s) => s.setErrorModal);
   const docOpen = useStore((s) => s.docOpen);
   const setDocOpen = useStore((s) => s.setDocOpen);
+  const sidebarCollapsed = useStore((s) => s.sidebarCollapsed);
+  const setSidebarCollapsed = useStore((s) => s.setSidebarCollapsed);
   const fontSize = useStore((s) => s.fontSize);
 
   return (
@@ -35,6 +37,16 @@ export function Toolbar() {
       className="flex items-center gap-1.5 px-3 h-10 bg-navy-900 border-b border-navy-700 shrink-0 select-none"
       style={{ zoom: FONT_SIZE_PRESETS[fontSize].uiZoom }}
     >
+      <button
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+        className="w-8 h-8 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-navy-800 transition-colors shrink-0"
+      >
+        {sidebarCollapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
+      </button>
+
+      <div className="w-px h-4 bg-navy-700 mx-0.5" />
+
       <button
         onClick={requestExecute}
         disabled={isExecuting}

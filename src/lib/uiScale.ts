@@ -1,9 +1,12 @@
 export type FontSizePreset = 'small' | 'medium' | 'large';
 
-export const FONT_SIZE_PRESETS: Record<FontSizePreset, { label: string; editor: number; uiZoom: number }> = {
-  small: { label: 'Small', editor: 12, uiZoom: 0.875 },
-  medium: { label: 'Medium', editor: 14, uiZoom: 1 },
-  large: { label: 'Large', editor: 17, uiZoom: 1.15 },
+export const FONT_SIZE_PRESETS: Record<FontSizePreset, { label: string; editor: number; uiZoom: number; docsZoom: number }> = {
+  // docsZoom runs hotter than uiZoom — the docs panel's own text is mostly set in small
+  // (10-12px) arbitrary Tailwind sizes, so it needs a bigger multiplier to read as
+  // comparably sized to the rest of the app's chrome at each preset.
+  small: { label: 'Small', editor: 12, uiZoom: 0.875, docsZoom: 1.05 },
+  medium: { label: 'Medium', editor: 14, uiZoom: 1, docsZoom: 1.2 },
+  large: { label: 'Large', editor: 17, uiZoom: 1.15, docsZoom: 1.38 },
 };
 
 export function isFontSizePreset(v: string): v is FontSizePreset {

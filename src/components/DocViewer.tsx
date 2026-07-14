@@ -369,15 +369,15 @@ export function DocViewer() {
   return (
     <div
       className="w-full h-full bg-navy-900 flex flex-col overflow-hidden text-sm select-none"
-      style={{ zoom: FONT_SIZE_PRESETS[fontSize].uiZoom }}
+      style={{ zoom: FONT_SIZE_PRESETS[fontSize].docsZoom }}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 h-10 bg-navy-900 border-b border-navy-700 shrink-0">
-        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex-1">Docs</span>
+      <div className="flex h-8 shrink-0 items-center px-4 bg-navy-900 border-b border-navy-700">
+        <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500 flex-1">Docs</span>
         <button
           onClick={() => setDocOpen(false)}
           title="Close documentation"
-          className="w-6 h-6 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-navy-800 transition-colors"
+          className="w-5 h-5 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-navy-800 transition-colors -mr-1"
         >
           <X size={13} />
         </button>

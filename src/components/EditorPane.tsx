@@ -279,7 +279,10 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex h-8 shrink-0 items-center px-4 bg-navy-900 border-b border-navy-700">
+      <div
+        className="flex h-8 shrink-0 items-center px-4 bg-navy-900 border-b border-navy-700"
+        style={{ zoom: FONT_SIZE_PRESETS[fontSize].docsZoom }}
+      >
         <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500">Request</span>
       </div>
       <div ref={containerRef} className="flex-1 overflow-hidden">

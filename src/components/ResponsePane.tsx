@@ -27,7 +27,10 @@ export function ResponsePane() {
 
   return (
     <div className="flex flex-col h-full" style={{ zoom: FONT_SIZE_PRESETS[fontSize].uiZoom }}>
-      <div className="flex h-8 shrink-0 items-center px-4 bg-navy-900 border-b border-navy-700">
+      <div
+        className="flex h-8 shrink-0 items-center px-4 bg-navy-900 border-b border-navy-700"
+        style={{ zoom: FONT_SIZE_PRESETS[fontSize].docsZoom / FONT_SIZE_PRESETS[fontSize].uiZoom }}
+      >
         <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500">
           Response
           {isExecuting && (

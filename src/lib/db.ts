@@ -170,6 +170,7 @@ export interface LayoutState {
   docWidth: number;
   responseFraction: number;
   docOpen: boolean;
+  sidebarCollapsed: boolean;
 }
 
 const DEFAULT_LAYOUT: LayoutState = {
@@ -178,6 +179,7 @@ const DEFAULT_LAYOUT: LayoutState = {
   docWidth: 300,
   responseFraction: 0.45,
   docOpen: false,
+  sidebarCollapsed: false,
 };
 
 export async function loadLayout(): Promise<LayoutState> {
@@ -196,6 +198,7 @@ export async function loadLayout(): Promise<LayoutState> {
     docWidth: num('layout_doc_width', DEFAULT_LAYOUT.docWidth),
     responseFraction: num('layout_response_fraction', DEFAULT_LAYOUT.responseFraction),
     docOpen: map['layout_doc_open'] === '1',
+    sidebarCollapsed: map['layout_sidebar_collapsed'] === '1',
   };
 }
 
@@ -207,6 +210,7 @@ export async function saveLayout(layout: LayoutState): Promise<void> {
     ['layout_doc_width', String(layout.docWidth)],
     ['layout_response_fraction', String(layout.responseFraction)],
     ['layout_doc_open', layout.docOpen ? '1' : '0'],
+    ['layout_sidebar_collapsed', layout.sidebarCollapsed ? '1' : '0'],
   ];
   for (const [key, value] of pairs) {
     await conn.execute(
