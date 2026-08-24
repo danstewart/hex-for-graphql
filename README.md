@@ -50,3 +50,9 @@ The compiled app will be in `src-tauri/target/release/bundle/`.
 - **Editor** — Monaco + monaco-graphql
 - **Backend** — Tauri 2 (Rust), reqwest
 - **Storage** — SQLite via `@tauri-apps/plugin-sql` (saves endpoint, headers, cookies, operations, variables, theme)
+
+## Install
+
+Install from [releases](https://github.com/danstewart/hex-for-graphql/releases)
+
+To bypass security warnings run: `xattr -cr /Applications/Hex.app`
