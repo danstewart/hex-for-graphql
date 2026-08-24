@@ -194,6 +194,7 @@ export function findOperationLine(doc: string, name: string): number | null {
 export async function executeGraphQL(
   url: string,
   headers: Record<string, string>,
+  cookies: Record<string, string>,
   query: string,
   variables: unknown,
   operationName: string | null,
@@ -201,6 +202,7 @@ export async function executeGraphQL(
   return invoke('execute_graphql', {
     url,
     headers,
+    cookies,
     query,
     variables: variables ?? null,
     operationName: operationName ?? null,
@@ -210,12 +212,14 @@ export async function executeGraphQL(
 export async function fetchIntrospection(
   url: string,
   headers: Record<string, string>,
+  cookies: Record<string, string>,
 ): Promise<IntrospectionQuery> {
   const result = await invoke<{ data?: IntrospectionQuery; errors?: unknown[] }>(
     'execute_graphql',
     {
       url,
       headers,
+      cookies,
       query: getIntrospectionQuery(),
       variables: null,
       operationName: 'IntrospectionQuery',

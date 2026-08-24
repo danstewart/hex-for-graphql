@@ -85,8 +85,10 @@ export function SettingsModal() {
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   const storeEndpoint = useStore((s) => s.endpoint);
   const storeHeaders = useStore((s) => s.headers);
+  const storeCookies = useStore((s) => s.cookies);
   const setEndpoint = useStore((s) => s.setEndpoint);
   const setHeaders = useStore((s) => s.setHeaders);
+  const setCookies = useStore((s) => s.setCookies);
   const storeEditorFont = useStore((s) => s.editorFont);
   const storeFontSize = useStore((s) => s.fontSize);
   const setEditorFont = useStore((s) => s.setEditorFont);
@@ -96,6 +98,7 @@ export function SettingsModal() {
 
   const [endpoint, setLocalEndpoint] = useState('');
   const [headers, setLocalHeaders] = useState<[string, string][]>([]);
+  const [cookies, setLocalCookies] = useState<[string, string][]>([]);
   const [editorFont, setLocalEditorFont] = useState('');
   const [fontSize, setLocalFontSize] = useState<FontSizePreset>('medium');
   const [installedFonts, setInstalledFonts] = useState<string[]>([]);
@@ -105,20 +108,23 @@ export function SettingsModal() {
     if (!settingsOpen) return;
     setLocalEndpoint(storeEndpoint);
     setLocalHeaders(storeHeaders.length > 0 ? storeHeaders : [['', '']]);
+    setLocalCookies(storeCookies.length > 0 ? storeCookies : [['', '']]);
     setLocalEditorFont(storeEditorFont);
     setLocalFontSize(storeFontSize);
     setInstalledFonts(detectInstalledFonts(FONT_CANDIDATES));
-  }, [settingsOpen, storeEndpoint, storeHeaders, storeEditorFont, storeFontSize]);
+  }, [settingsOpen, storeEndpoint, storeHeaders, storeCookies, storeEditorFont, storeFontSize]);
 
   async function handleSave() {
     const cleanHeaders = headers.filter(([k]) => k.trim() !== '');
+    const cleanCookies = cookies.filter(([name]) => name.trim() !== '');
     const fontValue = editorFont.trim() || 'Geist Mono, monospace';
     setEndpoint(endpoint);
     setHeaders(cleanHeaders);
+    setCookies(cleanCookies);
     setEditorFont(fontValue);
     setFontSize(fontSize);
     try {
-      await saveSettings(endpoint, cleanHeaders, fontValue, fontSize);
+      await saveSettings(endpoint, cleanHeaders, cleanCookies, fontValue, fontSize);
     } catch (err) {
       useStore.getState().addToast(`Settings saved in memory but failed to persist: ${String(err)}`);
     }
@@ -137,6 +143,22 @@ export function SettingsModal() {
   function updateHeader(i: number, field: 0 | 1, val: string) {
     setLocalHeaders((h) =>
       h.map((pair, j): [string, string] =>
+        j === i ? (field === 0 ? [val, pair[1]] : [pair[0], val]) : pair,
+      ),
+    );
+  }
+
+  function addCookie() {
+    setLocalCookies((c) => [...c, ['', '']]);
+  }
+
+  function removeCookie(i: number) {
+    setLocalCookies((c) => c.filter((_, j) => j !== i));
+  }
+
+  function updateCookie(i: number, field: 0 | 1, val: string) {
+    setLocalCookies((c) =>
+      c.map((pair, j): [string, string] =>
         j === i ? (field === 0 ? [val, pair[1]] : [pair[0], val]) : pair,
       ),
     );
@@ -213,6 +235,41 @@ export function SettingsModal() {
           className="text-xs text-violet-400 hover:text-violet-300 transition-colors mb-6"
         >
           + Add header
+        </button>
+
+        <label className="block mb-2 text-xs text-slate-400 uppercase tracking-wider">
+          Cookies
+        </label>
+        <div className="space-y-2 mb-2">
+          {cookies.map(([name, value], i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <input
+                value={name}
+                onChange={(e) => updateCookie(i, 0, e.target.value)}
+                placeholder="Name"
+                className="flex-1 bg-navy-950 border border-navy-700 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
+              />
+              <input
+                value={value}
+                onChange={(e) => updateCookie(i, 1, e.target.value)}
+                placeholder="Value"
+                className="flex-1 bg-navy-950 border border-navy-700 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
+              />
+              <button
+                onClick={() => removeCookie(i)}
+                className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-red-400 transition-colors shrink-0"
+                aria-label={`Remove cookie ${name || i + 1}`}
+              >
+                <X size={13} />
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={addCookie}
+          className="text-xs text-violet-400 hover:text-violet-300 transition-colors mb-6"
+        >
+          + Add cookie
         </button>
 
         {/* Theme */}

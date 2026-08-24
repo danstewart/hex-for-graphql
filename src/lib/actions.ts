@@ -9,6 +9,7 @@ export async function runOperation(
   const {
     endpoint,
     headers,
+    cookies,
     variablesContent,
     setResponse,
     setIsExecuting,
@@ -48,9 +49,11 @@ export async function runOperation(
   setIsExecuting(true);
   try {
     const headersMap = Object.fromEntries(headers);
+    const cookiesMap = Object.fromEntries(cookies);
     const result = await executeGraphQL(
       endpoint,
       headersMap,
+      cookiesMap,
       queryToSend,
       variables,
       operationName,

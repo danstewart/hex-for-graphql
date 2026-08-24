@@ -16,6 +16,7 @@ interface AppState {
   // Connection settings
   endpoint: string;
   headers: [string, string][];
+  cookies: [string, string][];
 
   // Sidebar
   operations: Operation[];
@@ -68,6 +69,7 @@ interface AppState {
   // Setters
   setEndpoint: (v: string) => void;
   setHeaders: (v: [string, string][]) => void;
+  setCookies: (v: [string, string][]) => void;
   setOperations: (v: Operation[]) => void;
   setEditorContent: (v: string) => void;
   setVariablesContent: (v: string) => void;
@@ -97,6 +99,7 @@ interface AppState {
 export const useStore = create<AppState>((set) => ({
   endpoint: '',
   headers: [],
+  cookies: [],
   operations: [],
   editorContent: '',
   variablesContent: '{}',
@@ -129,6 +132,7 @@ export const useStore = create<AppState>((set) => ({
 
   setEndpoint: (endpoint) => set({ endpoint }),
   setHeaders: (headers) => set({ headers }),
+  setCookies: (cookies) => set({ cookies }),
   setOperations: (operations) => set({ operations }),
   setEditorContent: (editorContent) => set({ editorContent }),
   setVariablesContent: (variablesContent) => set((s) => ({
