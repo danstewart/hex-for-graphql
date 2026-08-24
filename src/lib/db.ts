@@ -171,6 +171,7 @@ export interface LayoutState {
   responseFraction: number;
   docOpen: boolean;
   sidebarCollapsed: boolean;
+  variablesCollapsed: boolean;
 }
 
 const DEFAULT_LAYOUT: LayoutState = {
@@ -180,6 +181,7 @@ const DEFAULT_LAYOUT: LayoutState = {
   responseFraction: 0.45,
   docOpen: false,
   sidebarCollapsed: false,
+  variablesCollapsed: false,
 };
 
 export async function loadLayout(): Promise<LayoutState> {
@@ -199,6 +201,7 @@ export async function loadLayout(): Promise<LayoutState> {
     responseFraction: num('layout_response_fraction', DEFAULT_LAYOUT.responseFraction),
     docOpen: map['layout_doc_open'] === '1',
     sidebarCollapsed: map['layout_sidebar_collapsed'] === '1',
+    variablesCollapsed: map['layout_variables_collapsed'] === '1',
   };
 }
 
@@ -211,6 +214,7 @@ export async function saveLayout(layout: LayoutState): Promise<void> {
     ['layout_response_fraction', String(layout.responseFraction)],
     ['layout_doc_open', layout.docOpen ? '1' : '0'],
     ['layout_sidebar_collapsed', layout.sidebarCollapsed ? '1' : '0'],
+    ['layout_variables_collapsed', layout.variablesCollapsed ? '1' : '0'],
   ];
   for (const [key, value] of pairs) {
     await conn.execute(

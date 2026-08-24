@@ -25,6 +25,7 @@ interface AppState {
   variablesContent: string;
   operationVariables: Record<string, string>;
   currentOperationName: string | null;
+  variablesCollapsed: boolean;
   response: string | null;
   isExecuting: boolean;
 
@@ -66,6 +67,7 @@ interface AppState {
   setEditorContent: (v: string) => void;
   setVariablesContent: (v: string) => void;
   setCurrentOperationName: (name: string | null) => void;
+  setVariablesCollapsed: (v: boolean) => void;
   renameCurrentOperation: (newName: string) => void;
   setOperationVariables: (v: Record<string, string>) => void;
   setResponse: (v: string | null) => void;
@@ -92,6 +94,7 @@ export const useStore = create<AppState>((set) => ({
   variablesContent: '{}',
   operationVariables: {},
   currentOperationName: null,
+  variablesCollapsed: false,
   response: null,
   isExecuting: false,
   executeRequested: 0,
@@ -130,6 +133,7 @@ export const useStore = create<AppState>((set) => ({
     const variablesContent = (name && saved[name]) ?? '{}';
     return { currentOperationName: name, operationVariables: saved, variablesContent };
   }),
+  setVariablesCollapsed: (variablesCollapsed) => set({ variablesCollapsed }),
   setOperationVariables: (operationVariables) => set({ operationVariables }),
   renameCurrentOperation: (newName) => set((s) => {
     const oldName = s.currentOperationName;
