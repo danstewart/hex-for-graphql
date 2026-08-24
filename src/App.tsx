@@ -269,21 +269,22 @@ function AppInner() {
           </div>
 
           {!variablesCollapsed && (
-            <>
-              <Resizer
-                axis="y"
-                size={bottomHeight}
-                min={60}
-                max={400}
-                onResize={setBottomHeight}
-              />
-
-              {/* Variables panel */}
-              <div style={{ height: bottomHeight, flexShrink: 0 }} className="border-t border-navy-700 overflow-hidden">
-                <BottomPanel />
-              </div>
-            </>
+            <Resizer
+              axis="y"
+              size={bottomHeight}
+              min={60}
+              max={400}
+              onResize={setBottomHeight}
+            />
           )}
+
+          {/* Keep the panel header visible so its local toggle can reopen it. */}
+          <div
+            style={variablesCollapsed ? { flexShrink: 0 } : { height: bottomHeight, flexShrink: 0 }}
+            className="border-t border-navy-700 overflow-hidden"
+          >
+            <BottomPanel />
+          </div>
         </div>
 
         {/* Doc viewer (right sidebar) */}

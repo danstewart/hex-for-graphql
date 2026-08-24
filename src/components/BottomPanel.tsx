@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import MonacoEditor, { type BeforeMount, type OnMount } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor';
+import { PanelBottomClose, PanelBottomOpen } from 'lucide-react';
 import { useStore } from '../store';
 import { registerAllThemes, MONACO_THEME_MAP } from '../lib/monacoTheme';
 import { saveOperationVariables } from '../lib/db';
@@ -50,6 +51,8 @@ export function BottomPanel() {
   const schemaStatus = useStore((s) => s.schemaStatus);
   const theme = useStore((s) => s.theme);
   const fontSize = useStore((s) => s.fontSize);
+  const variablesCollapsed = useStore((s) => s.variablesCollapsed);
+  const setVariablesCollapsed = useStore((s) => s.setVariablesCollapsed);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
 
@@ -84,30 +87,45 @@ export function BottomPanel() {
   }
 
   return (
-    <div className="flex flex-col h-full" style={{ zoom: FONT_SIZE_PRESETS[fontSize].uiZoom }}>
+    <div
+      className={`flex flex-col ${variablesCollapsed ? '' : 'h-full'}`}
+      style={{ zoom: FONT_SIZE_PRESETS[fontSize].uiZoom }}
+    >
       <div
-        className="flex h-8 shrink-0 items-center px-4 bg-navy-900 border-b border-navy-700"
+        className={`flex h-8 shrink-0 items-center pl-4 pr-1 bg-navy-900 ${variablesCollapsed ? '' : 'border-b border-navy-700'}`}
         style={{ zoom: FONT_SIZE_PRESETS[fontSize].docsZoom / FONT_SIZE_PRESETS[fontSize].uiZoom }}
       >
-        <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500">
+        <span className="min-w-0 flex-1 truncate text-[10px] font-semibold tracking-widest uppercase text-slate-500">
           {currentOperationName
             ? <>Variables for <span className="text-slate-600">{currentOperationName}</span></>
             : 'Variables'}
         </span>
+        <button
+          type="button"
+          onClick={() => setVariablesCollapsed(!variablesCollapsed)}
+          title={variablesCollapsed ? 'Show variables panel' : 'Hide variables panel'}
+          aria-label={variablesCollapsed ? 'Show variables panel' : 'Hide variables panel'}
+          aria-expanded={!variablesCollapsed}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-navy-800 hover:text-slate-300 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
+        >
+          {variablesCollapsed ? <PanelBottomOpen size={15} /> : <PanelBottomClose size={15} />}
+        </button>
       </div>
-      <div className="flex-1 overflow-hidden">
-        <MonacoEditor
-          path="hex://variables"
-          height="100%"
-          defaultLanguage="json"
-          theme={MONACO_THEME_MAP[theme] ?? 'hex-noir'}
-          beforeMount={handleBeforeMount}
-          onMount={handleMount}
-          value={variablesContent}
-          onChange={handleChange}
-          options={VARIABLES_OPTIONS}
-        />
-      </div>
+      {!variablesCollapsed && (
+        <div className="flex-1 overflow-hidden">
+          <MonacoEditor
+            path="hex://variables"
+            height="100%"
+            defaultLanguage="json"
+            theme={MONACO_THEME_MAP[theme] ?? 'hex-noir'}
+            beforeMount={handleBeforeMount}
+            onMount={handleMount}
+            value={variablesContent}
+            onChange={handleChange}
+            options={VARIABLES_OPTIONS}
+          />
+        </div>
+      )}
     </div>
   );
 }

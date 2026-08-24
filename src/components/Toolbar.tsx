@@ -6,8 +6,6 @@ import {
   Settings as SettingsIcon,
   PanelLeftClose,
   PanelLeftOpen,
-  PanelBottomClose,
-  PanelBottomOpen,
 } from 'lucide-react';
 import { useStore } from '../store';
 import { refreshSchema } from '../lib/schema';
@@ -40,8 +38,6 @@ export function Toolbar() {
   const setDocOpen = useStore((s) => s.setDocOpen);
   const sidebarCollapsed = useStore((s) => s.sidebarCollapsed);
   const setSidebarCollapsed = useStore((s) => s.setSidebarCollapsed);
-  const variablesCollapsed = useStore((s) => s.variablesCollapsed);
-  const setVariablesCollapsed = useStore((s) => s.setVariablesCollapsed);
   const fontSize = useStore((s) => s.fontSize);
 
   return (
@@ -55,14 +51,6 @@ export function Toolbar() {
         className="w-8 h-8 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-navy-800 transition-colors shrink-0"
       >
         {sidebarCollapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
-      </button>
-
-      <button
-        onClick={() => setVariablesCollapsed(!variablesCollapsed)}
-        title={variablesCollapsed ? 'Show variables panel' : 'Hide variables panel'}
-        className="w-8 h-8 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-navy-800 transition-colors shrink-0"
-      >
-        {variablesCollapsed ? <PanelBottomOpen size={15} /> : <PanelBottomClose size={15} />}
       </button>
 
       <div className="w-px h-4 bg-navy-700 mx-0.5" />
