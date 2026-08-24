@@ -116,7 +116,7 @@ export function Sidebar({ onNavigate }: Props) {
                         </button>
                         <button
                           onClick={(e) => void handleDelete(e, op.id)}
-                          className="shrink-0 w-6 h-6 mr-1 flex items-center justify-center rounded-md opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 hover:bg-navy-700 transition-all"
+                          className="shrink-0 w-6 h-6 mr-1 flex items-center justify-center rounded-md opacity-0 group-hover:opacity-100 text-slate-500 hover:text-danger hover:bg-navy-700 transition-all"
                           title={`Delete ${op.name}`}
                         >
                           <X size={13} />

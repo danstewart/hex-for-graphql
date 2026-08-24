@@ -32,7 +32,7 @@ function TypeRef({ t, onNavigate }: { t: string; onNavigate?: (name: string) => 
   const baseName = t.replace(/[\[\]!]/g, '');
   return (
     <span
-      className={`text-blue-400 font-mono text-[11px] ${onNavigate ? 'cursor-pointer hover:text-blue-300 hover:underline' : ''}`}
+      className={`text-syntax-type font-mono text-[11px] ${onNavigate ? 'cursor-pointer hover:text-syntax-type-hover hover:underline' : ''}`}
       onClick={onNavigate ? (e) => { e.stopPropagation(); onNavigate(baseName); } : undefined}
     >
       {t}
@@ -47,7 +47,7 @@ function ArgList({ args, onNavigate }: { args: readonly GraphQLArgument[]; onNav
       <div className="text-[10px] text-slate-500 uppercase tracking-wide mb-0.5">Arguments</div>
       {args.map(arg => (
         <div key={arg.name} className="mb-0.5">
-          <span className="text-yellow-300 font-mono text-[11px]">{arg.name}</span>
+          <span className="text-syntax-argument font-mono text-[11px]">{arg.name}</span>
           <span className="text-slate-600 text-[11px]">: </span>
           <TypeRef t={arg.type.toString()} onNavigate={onNavigate} />
           {arg.defaultValue !== undefined && (
@@ -370,7 +370,7 @@ export function DocViewer() {
         >
           <span className="mt-0.5"><ToggleIcon open={open} /></span>
           <div className="min-w-0">
-            <div className="text-green-300 font-mono">{typeName}</div>
+            <div className="text-syntax-object font-mono">{typeName}</div>
             {type.description && <div className="text-slate-500 text-[10px] truncate leading-relaxed">{type.description}</div>}
           </div>
         </button>
@@ -410,7 +410,7 @@ export function DocViewer() {
         >
           <span className="mt-0.5"><ToggleIcon open={open} /></span>
           <div className="min-w-0">
-            <div className="text-orange-300 font-mono">{typeName}</div>
+            <div className="text-syntax-interface font-mono">{typeName}</div>
             {type.description && <div className="text-slate-500 text-[10px] truncate leading-relaxed">{type.description}</div>}
           </div>
         </button>
@@ -457,7 +457,7 @@ export function DocViewer() {
         >
           <span className="mt-0.5"><ToggleIcon open={open} /></span>
           <div className="min-w-0">
-            <div className="text-purple-300 font-mono">{typeName}</div>
+            <div className="text-syntax-enum font-mono">{typeName}</div>
             {type.description && <div className="text-slate-500 text-[10px] truncate leading-relaxed">{type.description}</div>}
           </div>
         </button>
@@ -500,7 +500,7 @@ export function DocViewer() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search types & fields…"
-          className="w-full bg-navy-800 border border-navy-700 rounded-md px-2 py-1 text-[12px] text-slate-200 placeholder-slate-500 outline-none focus:border-violet-500 transition-colors"
+          className="w-full bg-navy-800 border border-navy-700 rounded-md px-2 py-1 text-[12px] text-slate-200 placeholder-slate-500 outline-none focus:border-accent transition-colors"
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck={false}
@@ -515,10 +515,10 @@ export function DocViewer() {
           </p>
         )}
         {schemaStatus === 'loading' && (
-          <p className="p-4 text-yellow-400 text-xs">Loading schema…</p>
+          <p className="p-4 text-warning text-xs">Loading schema…</p>
         )}
         {schemaStatus === 'error' && (
-          <p className="p-4 text-red-400 text-xs">Schema failed to load.</p>
+          <p className="p-4 text-danger text-xs">Schema failed to load.</p>
         )}
 
         {/* Search results */}
@@ -542,7 +542,7 @@ export function DocViewer() {
                             <span className="text-slate-200 font-mono font-medium">{result.fieldName}</span>
                           </>
                         ) : (
-                          <span className="text-green-300 font-mono font-medium">{result.typeName}</span>
+                          <span className="text-syntax-object font-mono font-medium">{result.typeName}</span>
                         )}
                         {result.typeStr && (
                           <>
@@ -642,7 +642,7 @@ export function DocViewer() {
                       >
                         <span className="mt-0.5"><ToggleIcon open={open} /></span>
                         <div className="min-w-0">
-                          <div className="text-pink-300 font-mono">{n}</div>
+                          <div className="text-syntax-input font-mono">{n}</div>
                           {type.description && <div className="text-slate-500 text-[10px] truncate leading-relaxed">{type.description}</div>}
                         </div>
                       </button>
@@ -650,7 +650,7 @@ export function DocViewer() {
                         <div key={m.name} className="flex items-center gap-1 py-[3px] text-[11px]" style={{ paddingLeft: 32 }}>
                           <ToggleIcon open={null} />
                           <span
-                            className="text-green-300 font-mono cursor-pointer hover:text-green-200 hover:underline"
+                            className="text-syntax-object font-mono cursor-pointer hover:text-success-hover hover:underline"
                             onClick={() => navigateToTarget(m.name)}
                           >{m.name}</span>
                         </div>
@@ -692,7 +692,7 @@ export function DocViewer() {
                   return (
                     <div key={n} id={`doc-type-${n}`} className="flex items-center gap-1 py-[3px] text-[11px]" style={{ paddingLeft: 20 }}>
                       <ToggleIcon open={null} />
-                      <span className="text-cyan-300 font-mono">{n}</span>
+                      <span className="text-syntax-scalar font-mono">{n}</span>
                       {type?.description && <span className="text-slate-500 truncate ml-1">{type.description}</span>}
                     </div>
                   );

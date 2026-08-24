@@ -22,9 +22,9 @@ const SCHEMA_STATUS_LABEL: Record<string, string> = {
 
 const SCHEMA_STATUS_CLASS: Record<string, string> = {
   none: 'text-slate-600',
-  loading: 'text-yellow-400',
-  loaded: 'text-green-400',
-  error: 'text-red-400',
+  loading: 'text-warning',
+  loaded: 'text-success',
+  error: 'text-danger',
 };
 
 export function Toolbar() {
@@ -70,7 +70,7 @@ export function Toolbar() {
       <button
         onClick={requestExecute}
         disabled={isExecuting}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium text-white bg-violet-600 hover:bg-violet-500 active:bg-violet-700 disabled:opacity-40 transition-all hover:shadow-[0_0_14px_rgba(139,92,246,0.45)] disabled:shadow-none"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium text-accent-foreground bg-accent hover:bg-accent-hover active:bg-accent-active disabled:opacity-40 transition-all hover:shadow-[0_0_14px_var(--accent-glow)] disabled:shadow-none"
       >
         {isExecuting ? (
           <Loader2 size={12} className="animate-spin" />
@@ -101,7 +101,7 @@ export function Toolbar() {
       {schemaStatus === 'error' ? (
         <button
           onClick={() => setErrorModal({ title: 'Schema Error', detail: schemaError ?? '' })}
-          className={`flex items-center gap-1 text-xs font-medium ${SCHEMA_STATUS_CLASS.error} hover:text-red-300 transition-colors`}
+          className={`flex items-center gap-1 text-xs font-medium ${SCHEMA_STATUS_CLASS.error} hover:text-danger-hover transition-colors`}
         >
           {SCHEMA_STATUS_LABEL.error}
         </button>
@@ -126,7 +126,7 @@ export function Toolbar() {
         onClick={() => setDocOpen(!docOpen)}
         className={`px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
           docOpen
-            ? 'bg-violet-600/30 text-violet-300 hover:bg-violet-600/40'
+            ? 'bg-accent-soft text-accent hover:bg-accent-soft-hover'
             : 'text-slate-400 hover:text-slate-200 hover:bg-navy-800'
         }`}
         title="Toggle documentation panel"

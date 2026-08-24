@@ -4,29 +4,7 @@ import { useStore } from '../store';
 import { saveSettings, saveTheme } from '../lib/db';
 import { refreshSchema } from '../lib/schema';
 import { FONT_SIZE_PRESETS, type FontSizePreset } from '../lib/uiScale';
-
-const THEMES = [
-  {
-    id: 'noir',
-    label: 'Noir',
-    swatches: ['#06060f', '#0d0d1f', '#1e1e3a'],
-  },
-  {
-    id: 'graphite',
-    label: 'Graphite',
-    swatches: ['#0c0c0d', '#141415', '#2a2a2e'],
-  },
-  {
-    id: 'mocha',
-    label: 'Mocha',
-    swatches: ['#0e0c0a', '#1a1613', '#332b23'],
-  },
-  {
-    id: 'light',
-    label: 'Dawn',
-    swatches: ['#faf9f7', '#f3f0ec', '#d5cfc8'],
-  },
-];
+import { APP_THEMES, type ThemeId } from '../lib/themes';
 
 const FONT_CANDIDATES = [
   'Monaco',
@@ -168,7 +146,7 @@ export function SettingsModal() {
     setLocalEditorFont(`${name}, monospace`);
   }
 
-  async function handleThemeChange(id: string) {
+  async function handleThemeChange(id: ThemeId) {
     setTheme(id);
     try {
       await saveTheme(id);
@@ -199,7 +177,7 @@ export function SettingsModal() {
           value={endpoint}
           onChange={(e) => setLocalEndpoint(e.target.value)}
           placeholder="https://api.example.com/graphql"
-          className="w-full bg-navy-950 border border-navy-700 rounded-md px-3 py-2 text-sm mb-5 focus:outline-none focus:border-violet-500 placeholder-slate-600"
+          className="w-full bg-navy-950 border border-navy-700 rounded-md px-3 py-2 text-sm mb-5 focus:outline-none focus:border-accent placeholder-slate-600"
           autoFocus
         />
 
@@ -213,17 +191,17 @@ export function SettingsModal() {
                 value={key}
                 onChange={(e) => updateHeader(i, 0, e.target.value)}
                 placeholder="Key"
-                className="flex-1 bg-navy-950 border border-navy-700 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
+                className="flex-1 bg-navy-950 border border-navy-700 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-accent placeholder-slate-600"
               />
               <input
                 value={value}
                 onChange={(e) => updateHeader(i, 1, e.target.value)}
                 placeholder="Value"
-                className="flex-1 bg-navy-950 border border-navy-700 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
+                className="flex-1 bg-navy-950 border border-navy-700 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-accent placeholder-slate-600"
               />
               <button
                 onClick={() => removeHeader(i)}
-                className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-red-400 transition-colors shrink-0"
+                className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-danger transition-colors shrink-0"
               >
                 <X size={13} />
               </button>
@@ -232,7 +210,7 @@ export function SettingsModal() {
         </div>
         <button
           onClick={addHeader}
-          className="text-xs text-violet-400 hover:text-violet-300 transition-colors mb-6"
+          className="text-xs text-accent hover:text-accent-hover transition-colors mb-6"
         >
           + Add header
         </button>
@@ -247,17 +225,17 @@ export function SettingsModal() {
                 value={name}
                 onChange={(e) => updateCookie(i, 0, e.target.value)}
                 placeholder="Name"
-                className="flex-1 bg-navy-950 border border-navy-700 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
+                className="flex-1 bg-navy-950 border border-navy-700 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-accent placeholder-slate-600"
               />
               <input
                 value={value}
                 onChange={(e) => updateCookie(i, 1, e.target.value)}
                 placeholder="Value"
-                className="flex-1 bg-navy-950 border border-navy-700 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
+                className="flex-1 bg-navy-950 border border-navy-700 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:border-accent placeholder-slate-600"
               />
               <button
                 onClick={() => removeCookie(i)}
-                className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-red-400 transition-colors shrink-0"
+                className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-danger transition-colors shrink-0"
                 aria-label={`Remove cookie ${name || i + 1}`}
               >
                 <X size={13} />
@@ -267,7 +245,7 @@ export function SettingsModal() {
         </div>
         <button
           onClick={addCookie}
-          className="text-xs text-violet-400 hover:text-violet-300 transition-colors mb-6"
+          className="text-xs text-accent hover:text-accent-hover transition-colors mb-6"
         >
           + Add cookie
         </button>
@@ -275,16 +253,17 @@ export function SettingsModal() {
         {/* Theme */}
         <div className="border-t border-navy-700 pt-5 mb-6">
           <p className="text-xs text-slate-400 uppercase tracking-wider mb-3">Theme</p>
-          <div className="flex gap-3">
-            {THEMES.map((t) => {
+          <div className="grid grid-cols-4 gap-3">
+            {APP_THEMES.map((t) => {
               const active = theme === t.id;
               return (
                 <button
                   key={t.id}
                   onClick={() => handleThemeChange(t.id)}
+                  title={`${t.label} · ${t.family}`}
                   className={`flex flex-col items-center gap-2 p-2 rounded-lg border transition-colors ${
                     active
-                      ? 'border-violet-500 bg-violet-600/10'
+                      ? 'border-accent bg-accent-soft'
                       : 'border-navy-700 hover:border-navy-600'
                   }`}
                 >
@@ -294,11 +273,11 @@ export function SettingsModal() {
                     ))}
                     {active && (
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <Check size={14} className="text-violet-400" />
+                        <Check size={14} className="text-accent" />
                       </div>
                     )}
                   </div>
-                  <span className={`text-xs ${active ? 'text-violet-400' : 'text-slate-500'}`}>
+                  <span className={`text-xs ${active ? 'text-accent' : 'text-slate-500'}`}>
                     {t.label}
                   </span>
                 </button>
@@ -319,7 +298,7 @@ export function SettingsModal() {
                 value={editorFont}
                 onChange={(e) => setLocalEditorFont(e.target.value)}
                 placeholder="Geist Mono, monospace"
-                className="w-full bg-navy-950 border border-navy-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-violet-500 placeholder-slate-600"
+                className="w-full bg-navy-950 border border-navy-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent placeholder-slate-600"
                 style={{ fontFamily: editorFont || undefined }}
               />
               {installedFonts.length > 0 && (
@@ -328,7 +307,7 @@ export function SettingsModal() {
                     <button
                       key={f}
                       onClick={() => applyFontSuggestion(f)}
-                      className="text-[11px] text-slate-500 hover:text-violet-400 transition-colors"
+                      className="text-[11px] text-slate-500 hover:text-accent transition-colors"
                       style={{ fontFamily: `${f}, monospace` }}
                     >
                       {f}
@@ -348,7 +327,7 @@ export function SettingsModal() {
                     onClick={() => setLocalFontSize(preset)}
                     className={`flex-1 rounded px-1.5 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
                       fontSize === preset
-                        ? 'bg-violet-600 text-white'
+                        ? 'bg-accent text-accent-foreground'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-navy-800'
                     }`}
                   >
@@ -377,7 +356,7 @@ export function SettingsModal() {
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 rounded-md text-sm text-white bg-violet-600 hover:bg-violet-500 font-medium transition-colors"
+            className="px-4 py-2 rounded-md text-sm text-accent-foreground bg-accent hover:bg-accent-hover font-medium transition-colors"
           >
             Save &amp; Refresh Schema
           </button>

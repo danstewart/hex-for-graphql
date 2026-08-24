@@ -13,7 +13,7 @@ function Toast({ id, message }: { id: number; message: string }) {
   }, [id, dismissToast]);
 
   return (
-    <div className="flex items-start gap-3 px-4 py-3 bg-navy-800 border border-red-900/50 rounded-lg shadow-lg text-sm text-red-300 max-w-sm">
+    <div className="flex items-start gap-3 px-4 py-3 bg-navy-800 border border-danger-border rounded-lg shadow-lg text-sm text-danger max-w-sm">
       <span className="flex-1 leading-snug">{message}</span>
       <button
         onClick={() => dismissToast(id)}

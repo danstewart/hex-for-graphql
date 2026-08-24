@@ -16,6 +16,28 @@
   --color-slate-400: var(--slate-400);
   --color-slate-500: var(--slate-500);
   --color-slate-600: var(--slate-600);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-active: var(--accent-active);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-hover: var(--accent-soft-hover);
+  --color-success: var(--success);
+  --color-success-hover: var(--success-hover);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-surface: var(--danger-surface);
+  --color-danger-border: var(--danger-border);
+  --color-syntax-type: var(--syntax-type);
+  --color-syntax-type-hover: var(--syntax-type-hover);
+  --color-syntax-argument: var(--syntax-argument);
+  --color-syntax-object: var(--syntax-object);
+  --color-syntax-interface: var(--syntax-interface);
+  --color-syntax-enum: var(--syntax-enum);
+  --color-syntax-input: var(--syntax-input);
+  --color-syntax-scalar: var(--syntax-scalar);
 }
 
 /* ── Themes ───────────────────────────────────────────────── */
@@ -33,36 +55,108 @@
   --slate-400: #94a3b8;
   --slate-500: #6c7d94;
   --slate-600: #5d7086;
+  --accent: #7c3aed;
+  --accent-hover: #8b5cf6;
+  --accent-active: #6d28d9;
+  --accent-foreground: #ffffff;
+  --accent-soft: #7c3aed1a;
+  --accent-soft-hover: #7c3aed33;
+  --accent-glow: #8b5cf673;
+  --success: #4ade80;
+  --success-hover: #86efac;
+  --warning: #facc15;
+  --danger: #f87171;
+  --danger-hover: #fca5a5;
+  --danger-surface: #7f1d1d66;
+  --danger-border: #991b1b;
+  --syntax-type: #60a5fa;
+  --syntax-type-hover: #93c5fd;
+  --syntax-argument: #fde047;
+  --syntax-object: #6ee7b7;
+  --syntax-interface: #fdba74;
+  --syntax-enum: #d8b4fe;
+  --syntax-input: #f9a8d4;
+  --syntax-scalar: #67e8f9;
+  --scrollbar-thumb: #ffffff26;
+  --scrollbar-thumb-hover: #ffffff40;
 }
 
-/* Graphite — neutral dark grey */
+/* Graphite — neutral greys with a crisp blue accent */
 [data-theme="graphite"] {
   --navy-950: #0c0c0d;
   --navy-900: #141415;
   --navy-800: #1e1e20;
   --navy-700: #2a2a2e;
   --navy-600: #39393f;
-  --slate-100: #f1f5f9;
-  --slate-200: #e2e8f0;
-  --slate-300: #cbd5e1;
-  --slate-400: #94a3b8;
-  --slate-500: #6c7d94;
-  --slate-600: #5d7086;
+  --slate-100: #f4f4f5;
+  --slate-200: #e4e4e7;
+  --slate-300: #d4d4d8;
+  --slate-400: #a1a1aa;
+  --slate-500: #71717a;
+  --slate-600: #5a5a63;
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --accent-active: #3b82f6;
+  --accent-foreground: #0c0c0d;
+  --accent-soft: #3b82f61a;
+  --accent-soft-hover: #3b82f633;
+  --accent-glow: #3b82f673;
+  --success: #4ade80;
+  --success-hover: #86efac;
+  --warning: #fbbf24;
+  --danger: #fb7185;
+  --danger-hover: #fda4af;
+  --danger-surface: #88133766;
+  --danger-border: #9f1239;
+  --syntax-type: #60a5fa;
+  --syntax-type-hover: #93c5fd;
+  --syntax-argument: #facc15;
+  --syntax-object: #4ade80;
+  --syntax-interface: #fb923c;
+  --syntax-enum: #c084fc;
+  --syntax-input: #f472b6;
+  --syntax-scalar: #22d3ee;
+  --scrollbar-thumb: #ffffff26;
+  --scrollbar-thumb-hover: #ffffff40;
 }
 
-/* Mocha — warm brown */
+/* Mocha — warm, low-contrast earth tones */
 [data-theme="mocha"] {
   --navy-950: #0e0c0a;
   --navy-900: #1a1613;
   --navy-800: #252019;
   --navy-700: #332b23;
   --navy-600: #473c30;
-  --slate-100: #f1f5f9;
-  --slate-200: #e2e8f0;
-  --slate-300: #cbd5e1;
-  --slate-400: #94a3b8;
-  --slate-500: #6c7d94;
-  --slate-600: #5d7086;
+  --slate-100: #f2e9de;
+  --slate-200: #e6d5c3;
+  --slate-300: #d7c2ad;
+  --slate-400: #ad9884;
+  --slate-500: #887564;
+  --slate-600: #6f5f51;
+  --accent: #d08770;
+  --accent-hover: #e0a088;
+  --accent-active: #b96f59;
+  --accent-foreground: #1a1613;
+  --accent-soft: #d087701f;
+  --accent-soft-hover: #d0877038;
+  --accent-glow: #d0877066;
+  --success: #a3be8c;
+  --success-hover: #bfd6aa;
+  --warning: #ebcb8b;
+  --danger: #df7f7f;
+  --danger-hover: #eea0a0;
+  --danger-surface: #7c303066;
+  --danger-border: #8f4141;
+  --syntax-type: #81a1c1;
+  --syntax-type-hover: #a5bed5;
+  --syntax-argument: #ebcb8b;
+  --syntax-object: #a3be8c;
+  --syntax-interface: #d08770;
+  --syntax-enum: #b48ead;
+  --syntax-input: #d8a1b9;
+  --syntax-scalar: #88c0d0;
+  --scrollbar-thumb: #ffffff26;
+  --scrollbar-thumb-hover: #ffffff40;
 }
 
 /* Dawn — warm light */
@@ -78,34 +172,187 @@
   --slate-400: #78716c;
   --slate-500: #7d7772;
   --slate-600: #948e88;
+  --accent: #6d28d9;
+  --accent-hover: #7c3aed;
+  --accent-active: #5b21b6;
+  --accent-foreground: #ffffff;
+  --accent-soft: #6d28d91a;
+  --accent-soft-hover: #6d28d92e;
+  --accent-glow: #6d28d959;
+  --success: #15803d;
+  --success-hover: #166534;
+  --warning: #a16207;
+  --danger: #b91c1c;
+  --danger-hover: #991b1b;
+  --danger-surface: #fee2e2;
+  --danger-border: #fca5a5;
+  --syntax-type: #1d4ed8;
+  --syntax-type-hover: #1e40af;
+  --syntax-argument: #92400e;
+  --syntax-object: #15803d;
+  --syntax-interface: #c2410c;
+  --syntax-enum: #7e22ce;
+  --syntax-input: #be185d;
+  --syntax-scalar: #0e7490;
+  --scrollbar-thumb: #00000026;
+  --scrollbar-thumb-hover: #00000040;
 }
 
-/* Hardcoded accent colours that need adjustment on light backgrounds — the defaults are
-   pastel shades tuned for dark backgrounds and fall below readable contrast on Dawn. */
-[data-theme="light"] .text-green-400  { color: #15803d; }
-[data-theme="light"] .text-green-300  { color: #15803d; }
-[data-theme="light"] .text-green-200  { color: #16a34a; }
-[data-theme="light"] .text-yellow-400 { color: #a16207; }
-[data-theme="light"] .text-yellow-300 { color: #a16207; }
-[data-theme="light"] .text-red-400    { color: #b91c1c; }
-[data-theme="light"] .text-red-300    { color: #dc2626; }
-[data-theme="light"] .text-violet-300 { color: #6d28d9; }
-[data-theme="light"] .text-violet-400 { color: #7c3aed; }
-[data-theme="light"] .text-blue-400   { color: #1d4ed8; }
-[data-theme="light"] .text-blue-300   { color: #2563eb; }
-[data-theme="light"] .text-cyan-300   { color: #0e7490; }
-[data-theme="light"] .text-orange-300 { color: #c2410c; }
-[data-theme="light"] .text-pink-300   { color: #be185d; }
-[data-theme="light"] .text-purple-300 { color: #7e22ce; }
+/* Dracula — based on the official dark palette */
+[data-theme="dracula"] {
+  --navy-950: #191a21;
+  --navy-900: #21222c;
+  --navy-800: #282a36;
+  --navy-700: #44475a;
+  --navy-600: #6272a4;
+  --slate-100: #f8f8f2;
+  --slate-200: #f1f1eb;
+  --slate-300: #deded8;
+  --slate-400: #b8b8b2;
+  --slate-500: #8c91b0;
+  --slate-600: #69759f;
+  --accent: #ff79c6;
+  --accent-hover: #ff92df;
+  --accent-active: #bd93f9;
+  --accent-foreground: #282a36;
+  --accent-soft: #ff79c61f;
+  --accent-soft-hover: #ff79c638;
+  --accent-glow: #ff79c66b;
+  --success: #50fa7b;
+  --success-hover: #69ff94;
+  --warning: #f1fa8c;
+  --danger: #ff5555;
+  --danger-hover: #ff6e6e;
+  --danger-surface: #ff555526;
+  --danger-border: #ff555580;
+  --syntax-type: #8be9fd;
+  --syntax-type-hover: #a4ffff;
+  --syntax-argument: #f1fa8c;
+  --syntax-object: #50fa7b;
+  --syntax-interface: #ffb86c;
+  --syntax-enum: #bd93f9;
+  --syntax-input: #ff79c6;
+  --syntax-scalar: #8be9fd;
+  --scrollbar-thumb: #f8f8f226;
+  --scrollbar-thumb-hover: #f8f8f240;
+}
 
-/* Scrollbars — light theme needs dark-on-light */
-[data-theme="light"] ::-webkit-scrollbar-thumb       { background: rgba(0,0,0,0.15); }
-[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
-[data-theme="light"] .monaco-scrollable-element > .scrollbar > .slider       { background: rgba(0,0,0,0.15) !important; }
-[data-theme="light"] .monaco-scrollable-element > .scrollbar > .slider:hover { background: rgba(0,0,0,0.25) !important; }
+/* Nord — Polar Night surfaces with Frost accents */
+[data-theme="nord"] {
+  --navy-950: #242933;
+  --navy-900: #2e3440;
+  --navy-800: #3b4252;
+  --navy-700: #434c5e;
+  --navy-600: #4c566a;
+  --slate-100: #eceff4;
+  --slate-200: #e5e9f0;
+  --slate-300: #d8dee9;
+  --slate-400: #b6c1d4;
+  --slate-500: #8f9bad;
+  --slate-600: #748196;
+  --accent: #88c0d0;
+  --accent-hover: #8fbcbb;
+  --accent-active: #88c0d0;
+  --accent-foreground: #2e3440;
+  --accent-soft: #88c0d01f;
+  --accent-soft-hover: #88c0d038;
+  --accent-glow: #88c0d066;
+  --success: #a3be8c;
+  --success-hover: #b5cea2;
+  --warning: #ebcb8b;
+  --danger: #bf616a;
+  --danger-hover: #d08770;
+  --danger-surface: #bf616a26;
+  --danger-border: #bf616a80;
+  --syntax-type: #81a1c1;
+  --syntax-type-hover: #88c0d0;
+  --syntax-argument: #ebcb8b;
+  --syntax-object: #a3be8c;
+  --syntax-interface: #d08770;
+  --syntax-enum: #b48ead;
+  --syntax-input: #b48ead;
+  --syntax-scalar: #8fbcbb;
+  --scrollbar-thumb: #eceff426;
+  --scrollbar-thumb-hover: #eceff440;
+}
 
-/* Doc-link underline — keep readable on light bg */
-[data-theme="light"] .hex-doc-link { text-decoration-color: #6d28d9; }
+/* Solarized Dark — precision low-contrast blues */
+[data-theme="solarized-dark"] {
+  --navy-950: #00212b;
+  --navy-900: #002b36;
+  --navy-800: #073642;
+  --navy-700: #164b56;
+  --navy-600: #586e75;
+  --slate-100: #fdf6e3;
+  --slate-200: #eee8d5;
+  --slate-300: #d5d0bf;
+  --slate-400: #93a1a1;
+  --slate-500: #839496;
+  --slate-600: #657b83;
+  --accent: #268bd2;
+  --accent-hover: #4aa3df;
+  --accent-active: #268bd2;
+  --accent-foreground: #00141a;
+  --accent-soft: #268bd224;
+  --accent-soft-hover: #268bd23d;
+  --accent-glow: #268bd266;
+  --success: #9fb000;
+  --success-hover: #b2c400;
+  --warning: #d3a400;
+  --danger: #f05a57;
+  --danger-hover: #ff7773;
+  --danger-surface: #dc322f2b;
+  --danger-border: #dc322f80;
+  --syntax-type: #2aa8e8;
+  --syntax-type-hover: #58b8e8;
+  --syntax-argument: #d3a400;
+  --syntax-object: #9fb000;
+  --syntax-interface: #e87929;
+  --syntax-enum: #b589d6;
+  --syntax-input: #d65d9e;
+  --syntax-scalar: #2aa198;
+  --scrollbar-thumb: #fdf6e326;
+  --scrollbar-thumb-hover: #fdf6e340;
+}
+
+/* Tokyo Night — inky blue surfaces and neon syntax accents */
+[data-theme="tokyo-night"] {
+  --navy-950: #16161e;
+  --navy-900: #1a1b26;
+  --navy-800: #24283b;
+  --navy-700: #343b58;
+  --navy-600: #414868;
+  --slate-100: #c0caf5;
+  --slate-200: #a9b1d6;
+  --slate-300: #9aa5ce;
+  --slate-400: #787c99;
+  --slate-500: #6b7089;
+  --slate-600: #565f89;
+  --accent: #7aa2f7;
+  --accent-hover: #8db0ff;
+  --accent-active: #7aa2f7;
+  --accent-foreground: #16161e;
+  --accent-soft: #7aa2f71f;
+  --accent-soft-hover: #7aa2f738;
+  --accent-glow: #7aa2f666;
+  --success: #9ece6a;
+  --success-hover: #b0dc7d;
+  --warning: #e0af68;
+  --danger: #f7768e;
+  --danger-hover: #ff899f;
+  --danger-surface: #f7768e26;
+  --danger-border: #f7768e80;
+  --syntax-type: #7dcfff;
+  --syntax-type-hover: #9adaff;
+  --syntax-argument: #e0af68;
+  --syntax-object: #9ece6a;
+  --syntax-interface: #ff9e64;
+  --syntax-enum: #bb9af7;
+  --syntax-input: #ff7ab2;
+  --syntax-scalar: #2ac3de;
+  --scrollbar-thumb: #c0caf526;
+  --scrollbar-thumb-hover: #c0caf540;
+}
 
 html, body {
   font-family: 'Geist', -apple-system, system-ui, sans-serif;
@@ -124,12 +371,12 @@ html, body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--scrollbar-thumb-hover);
 }
 
 ::-webkit-scrollbar-corner {
@@ -139,11 +386,11 @@ html, body {
 /* Monaco editor scrollbars */
 .monaco-scrollable-element > .scrollbar > .slider {
   border-radius: 3px !important;
-  background: rgba(255, 255, 255, 0.15) !important;
+  background: var(--scrollbar-thumb) !important;
 }
 
 .monaco-scrollable-element > .scrollbar > .slider:hover {
-  background: rgba(255, 255, 255, 0.25) !important;
+  background: var(--scrollbar-thumb-hover) !important;
 }
 
 .monaco-scrollable-element > .scrollbar.vertical {
@@ -157,6 +404,6 @@ html, body {
 /* Ctrl/Cmd+click-to-docs affordance in the GraphQL editor */
 .hex-doc-link {
   text-decoration: underline;
-  text-decoration-color: #a78bfa;
+  text-decoration-color: var(--accent);
   cursor: pointer;
 }
