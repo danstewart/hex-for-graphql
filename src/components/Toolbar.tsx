@@ -32,7 +32,7 @@ export function Toolbar() {
   const requestExecute = useStore((s) => s.requestExecute);
   const requestFormat = useStore((s) => s.requestFormat);
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
-  const setCommandPaletteOpen = useStore((s) => s.setCommandPaletteOpen);
+  const openCommandPalette = useStore((s) => s.openCommandPalette);
   const schemaStatus = useStore((s) => s.schemaStatus);
   const schemaError = useStore((s) => s.schemaError);
   const setErrorModal = useStore((s) => s.setErrorModal);
@@ -115,8 +115,8 @@ export function Toolbar() {
       <div className="flex-1" />
 
       <button
-        onClick={() => setCommandPaletteOpen(true)}
-        title="Command Palette (⌘P)"
+        onClick={() => openCommandPalette('navigate')}
+        title="Quick Open (⌘P)"
         className="w-8 h-8 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-navy-800 transition-colors"
       >
         <Search size={15} />

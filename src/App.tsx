@@ -50,9 +50,10 @@ class ErrorBoundary extends Component<
 function AppInner() {
   const setEndpoint = useStore((s) => s.setEndpoint);
   const setHeaders = useStore((s) => s.setHeaders);
+  const setCookies = useStore((s) => s.setCookies);
   const setOperations = useStore((s) => s.setOperations);
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
-  const setCommandPaletteOpen = useStore((s) => s.setCommandPaletteOpen);
+  const openCommandPalette = useStore((s) => s.openCommandPalette);
   const errorModal = useStore((s) => s.errorModal);
   const setErrorModal = useStore((s) => s.setErrorModal);
   const theme = useStore((s) => s.theme);
@@ -135,7 +136,7 @@ function AppInner() {
         return result.value;
       };
 
-      const defaultSettings = { endpoint: '', headers: [] as [string,string][], editorFont: 'Geist Mono, monospace', fontSize: 'medium' as const, theme: 'noir' };
+      const defaultSettings = { endpoint: '', headers: [] as [string,string][], cookies: [] as [string,string][], editorFont: 'Geist Mono, monospace', fontSize: 'medium' as const, theme: 'noir' };
       const defaultLayout = { sidebarWidth: 192, bottomHeight: 180, docWidth: 300, responseFraction: 0.45, docOpen: false, sidebarCollapsed: false, variablesCollapsed: false };
       const settings = check(settingsResult, 'settings', defaultSettings);
       const ops      = check(opsResult,      'operations', []);
@@ -145,6 +146,7 @@ function AppInner() {
 
       setEndpoint(settings.endpoint);
       setHeaders(settings.headers);
+      setCookies(settings.cookies);
       setEditorFont(settings.editorFont);
       setFontSize(settings.fontSize);
       setTheme(settings.theme);
@@ -161,13 +163,13 @@ function AppInner() {
       layoutLoadedRef.current = true;
 
       if (failures.length > 0) {
-        setBootError(`Failed to load: ${failures.join(', ')}. These will not persist this session.`);
+        setBootError(`Failed to load: ${failures.join(', ')}`);
       }
 
       void refreshSchema();
     }
     void boot();
-  }, [setEndpoint, setHeaders, setOperations, setEditorFont, setFontSize, setOperationVariables, setTheme, setDocOpen, setSidebarCollapsed, setVariablesCollapsed]);
+  }, [setEndpoint, setHeaders, setCookies, setOperations, setEditorFont, setFontSize, setOperationVariables, setTheme, setDocOpen, setSidebarCollapsed, setVariablesCollapsed]);
 
   // Persist pane sizes and open/collapsed panel states, debounced,
   // once the initial layout has actually been hydrated from the DB (otherwise the
@@ -191,12 +193,12 @@ function AppInner() {
         setSettingsOpen(true);
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
         e.preventDefault();
-        setCommandPaletteOpen(true);
+        openCommandPalette(e.shiftKey ? 'commands' : 'navigate');
       }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [setSettingsOpen, setCommandPaletteOpen]);
+  }, [setSettingsOpen, openCommandPalette]);
 
   const handleNavigate = useCallback((name: string) => {
     setNavigateTo(name);
@@ -212,7 +214,7 @@ function AppInner() {
 
       {bootError && (
         <div className="px-4 py-2 bg-red-900/40 border-b border-red-800 text-red-300 text-xs">
-          DB unavailable: {bootError}. Settings won't persist.
+          DB unavailable: {bootError}. Changes may not persist this session.
         </div>
       )}
 

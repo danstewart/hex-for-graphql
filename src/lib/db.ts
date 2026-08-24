@@ -2,15 +2,74 @@ import Database from '@tauri-apps/plugin-sql';
 import type { Operation } from '../store';
 import { type FontSizePreset, isFontSizePreset, fontSizeFromLegacyPx } from './uiScale';
 
-let db: Database | null = null;
+let dbPromise: Promise<Database> | null = null;
 
-async function getDb(): Promise<Database> {
-  if (!db) {
-    db = await Database.load('sqlite:gqled.db');
-    await migrate(db);
+function getDb(): Promise<Database> {
+  if (!dbPromise) {
+    dbPromise = Database.load('sqlite:gqled.db')
+      .then(async (conn) => {
+        await migrate(conn);
+        await seedDefaultTestData(conn);
+        return conn;
+      })
+      .catch((error) => {
+        // Allow a later call to retry if opening or migrating the database failed.
+        dbPromise = null;
+        throw error;
+      });
   }
-  return db;
+  return dbPromise;
 }
+
+const DEFAULT_TEST_ENDPOINT = 'https://graphql.org/graphql';
+
+const DEFAULT_TEST_OPERATIONS: Pick<Operation, 'name' | 'type' | 'body'>[] = [
+  {
+    name: 'SampleFilms',
+    type: 'query',
+    body: `query SampleFilms {
+  allFilms {
+    edges {
+      node {
+        id
+        title
+        releaseDate
+      }
+    }
+  }
+}`,
+  },
+  {
+    name: 'SampleCharacters',
+    type: 'query',
+    body: `query SampleCharacters {
+  allPeople(first: 5) {
+    edges {
+      node {
+        id
+        name
+        birthYear
+        homeworld {
+          name
+        }
+      }
+    }
+  }
+}`,
+  },
+  {
+    name: 'SampleFilm',
+    type: 'query',
+    body: `query SampleFilm($id: ID!) {
+  film(id: $id) {
+    id
+    title
+    director
+    releaseDate
+  }
+}`,
+  },
+];
 
 async function migrate(conn: Database): Promise<void> {
   await conn.execute(`
@@ -45,9 +104,64 @@ async function migrate(conn: Database): Promise<void> {
   `);
 }
 
+async function seedDefaultTestData(conn: Database): Promise<void> {
+  const operationRows = await conn.select<{ name: string }[]>(
+    'SELECT name FROM operations',
+  );
+  const [endpointSetting] = await conn.select<{ value: string }[]>(
+    `SELECT value FROM settings WHERE key = 'endpoint'`,
+  );
+  const [seedSetting] = await conn.select<{ value: string }[]>(
+    `SELECT value FROM settings WHERE key = 'starter_data_seeded'`,
+  );
+
+  if (seedSetting?.value === '1') return;
+
+  const sampleNames = new Set(DEFAULT_TEST_OPERATIONS.map((operation) => operation.name));
+  const containsUserOperations = operationRows.some((operation) => !sampleNames.has(operation.name));
+  const endpoint = endpointSetting?.value.trim() ?? '';
+
+  // Seed only an unconfigured database (or finish an interrupted partial seed). Existing
+  // endpoints and user-created operations always win.
+  if (containsUserOperations || (endpoint && endpoint !== DEFAULT_TEST_ENDPOINT)) return;
+
+  await conn.execute(
+    `INSERT OR REPLACE INTO settings (key, value) VALUES ('endpoint', ?)`,
+    [DEFAULT_TEST_ENDPOINT],
+  );
+  await conn.execute(
+    `INSERT OR IGNORE INTO settings (key, value) VALUES ('headers', '[]')`,
+  );
+
+  for (const operation of DEFAULT_TEST_OPERATIONS) {
+    await conn.execute(
+      `INSERT OR IGNORE INTO operations (name, type, body, last_run_at)
+       VALUES (?, ?, ?, NULL)`,
+      [operation.name, operation.type, operation.body],
+    );
+  }
+
+  await conn.execute(
+    `INSERT OR REPLACE INTO operation_variables (name, variables)
+     VALUES ('SampleFilm', '{"id":"ZmlsbXM6MQ=="}')`,
+  );
+
+  const starterDocument = DEFAULT_TEST_OPERATIONS.map((operation) => operation.body).join('\n\n');
+  await conn.execute(
+    `UPDATE editor_state SET content = ? WHERE id = 1 AND TRIM(content) = ''`,
+    [starterDocument],
+  );
+  // Write the marker last. If an earlier statement fails, the next launch can safely finish
+  // inserting the idempotent starter rows.
+  await conn.execute(
+    `INSERT OR REPLACE INTO settings (key, value) VALUES ('starter_data_seeded', '1')`,
+  );
+}
+
 export async function loadSettings(): Promise<{
   endpoint: string;
   headers: [string, string][];
+  cookies: [string, string][];
   editorFont: string;
   fontSize: FontSizePreset;
   theme: string;
@@ -58,8 +172,12 @@ export async function loadSettings(): Promise<{
   );
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
   let headers: [string, string][] = [];
+  let cookies: [string, string][] = [];
   try {
     headers = JSON.parse(map['headers'] ?? '[]');
+  } catch {}
+  try {
+    cookies = JSON.parse(map['cookies'] ?? '[]');
   } catch {}
   // `font_size` supersedes the legacy numeric `editor_font_size` px setting;
   // fall back to mapping the old value so existing installs keep a sensible size.
@@ -70,6 +188,7 @@ export async function loadSettings(): Promise<{
   return {
     endpoint: map['endpoint'] ?? '',
     headers,
+    cookies,
     editorFont: map['editor_font'] ?? 'Geist Mono, monospace',
     fontSize,
     theme: map['theme'] ?? 'noir',
@@ -79,6 +198,7 @@ export async function loadSettings(): Promise<{
 export async function saveSettings(
   endpoint: string,
   headers: [string, string][],
+  cookies: [string, string][],
   editorFont: string,
   fontSize: FontSizePreset,
 ): Promise<void> {
@@ -86,6 +206,7 @@ export async function saveSettings(
   const pairs: [string, string][] = [
     ['endpoint', endpoint],
     ['headers', JSON.stringify(headers)],
+    ['cookies', JSON.stringify(cookies)],
     ['editor_font', editorFont],
     ['font_size', fontSize],
   ];

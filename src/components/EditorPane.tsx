@@ -5,7 +5,7 @@ import { registerAllThemes, MONACO_THEME_MAP } from '../lib/monacoTheme';
 import { FONT_SIZE_PRESETS } from '../lib/uiScale';
 import { useStore } from '../store';
 import { runOperation } from '../lib/actions';
-import { findOperationLine, findOperationAtLine, formatOperationAtLine, resolveDocTarget } from '../lib/graphql';
+import { findOperationLine, findOperationAtLine, formatOperationAtLine, getOperationFoldLines, resolveDocTarget } from '../lib/graphql';
 import { saveEditorContent, renameOperationVariables } from '../lib/db';
 import { setMonacoInstance, getBuiltSchema } from '../lib/schema';
 
@@ -47,6 +47,9 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
   const setEditorContent = useStore((s) => s.setEditorContent);
   const executeRequested = useStore((s) => s.executeRequested);
   const formatRequested = useStore((s) => s.formatRequested);
+  const formatAllRequested = useStore((s) => s.formatAllRequested);
+  const foldOperationsRequested = useStore((s) => s.foldOperationsRequested);
+  const unfoldAllRequested = useStore((s) => s.unfoldAllRequested);
   const editorFont = useStore((s) => s.editorFont);
   const fontSize = useStore((s) => s.fontSize);
   const editorFontSize = FONT_SIZE_PRESETS[fontSize].editor;
@@ -96,6 +99,33 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       () => null,
     );
   }, [formatRequested]);
+
+  // Format the entire GraphQL document using monaco-graphql's document formatter.
+  useEffect(() => {
+    if (formatAllRequested === 0) return;
+    const editor = editorRef.current;
+    if (!editor) return;
+    void editor.getAction('editor.action.formatDocument')?.run();
+  }, [formatAllRequested]);
+
+  // Fold only the outer selection set of each query/mutation. Unfolding first clears any
+  // previous nested fold state so "Fold All" has one predictable level of folding.
+  useEffect(() => {
+    if (foldOperationsRequested === 0) return;
+    const editor = editorRef.current;
+    if (!editor) return;
+    const selectionLines = getOperationFoldLines(editor.getValue());
+    if (selectionLines.length === 0) return;
+    void (async () => {
+      await editor.getAction('editor.unfoldAll')?.run();
+      await editor.getAction('editor.fold')?.run({ selectionLines });
+    })();
+  }, [foldOperationsRequested]);
+
+  useEffect(() => {
+    if (unfoldAllRequested === 0) return;
+    void editorRef.current?.getAction('editor.unfoldAll')?.run();
+  }, [unfoldAllRequested]);
 
   // Navigate to operation when sidebar item is clicked
   useEffect(() => {
@@ -176,9 +206,12 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       editor.trigger('keyboard', 'editor.action.triggerSuggest', {});
     });
 
-    // ⌘P opens the command palette.
+    // ⌘P opens operation/schema navigation; ⌘⇧P opens executable commands.
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyP, () => {
-      useStore.getState().setCommandPaletteOpen(true);
+      useStore.getState().openCommandPalette('navigate');
+    });
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyP, () => {
+      useStore.getState().openCommandPalette('commands');
     });
 
     // ⌘↵ runs the operation at the cursor.

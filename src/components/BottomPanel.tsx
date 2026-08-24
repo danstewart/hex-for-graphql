@@ -57,7 +57,10 @@ export function BottomPanel() {
     monacoRef.current = monaco;
     applyVariablesSchema(monaco);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyP, () => {
-      useStore.getState().setCommandPaletteOpen(true);
+      useStore.getState().openCommandPalette('navigate');
+    });
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyP, () => {
+      useStore.getState().openCommandPalette('commands');
     });
   };
 
