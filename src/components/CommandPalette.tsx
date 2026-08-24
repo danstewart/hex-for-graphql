@@ -99,7 +99,7 @@ export function CommandPalette({ onNavigateOperation }: Props) {
       onClick={() => setOpen(false)}
     >
       <div
-        className="bg-navy-900 rounded-xl w-[520px] max-h-[60vh] shadow-2xl border border-navy-700 overflow-hidden flex flex-col"
+        className="bg-navy-900 rounded-xl w-[calc(100vw-2rem)] max-w-[800px] max-h-[60vh] shadow-2xl border border-navy-700 overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 px-3 h-11 border-b border-navy-700 shrink-0">
@@ -127,6 +127,7 @@ export function CommandPalette({ onNavigateOperation }: Props) {
               key={item.key}
               onClick={item.onSelect}
               onMouseEnter={() => setSelected(i)}
+              title={`${item.label} — ${item.sublabel}`}
               className={`w-full flex items-center gap-3 px-3 py-2 text-left text-[13px] font-mono transition-colors ${
                 i === selected ? 'bg-navy-800 text-slate-100' : 'text-slate-400'
               }`}
@@ -135,8 +136,10 @@ export function CommandPalette({ onNavigateOperation }: Props) {
                 ? <BookOpen size={12} className="text-slate-600 shrink-0" />
                 : <span className="w-3 shrink-0" />
               }
-              <span className="truncate flex-1">{item.label}</span>
-              <span className="text-[11px] text-slate-600 shrink-0 font-sans">{item.sublabel}</span>
+              <span className="truncate min-w-0 flex-1">{item.label}</span>
+              <span className="max-w-[50%] truncate text-[11px] text-slate-600 shrink font-sans">
+                {item.sublabel}
+              </span>
             </button>
           ))}
         </div>
