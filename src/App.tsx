@@ -50,6 +50,7 @@ class ErrorBoundary extends Component<
 function AppInner() {
   const setEndpoint = useStore((s) => s.setEndpoint);
   const setHeaders = useStore((s) => s.setHeaders);
+  const setCookies = useStore((s) => s.setCookies);
   const setOperations = useStore((s) => s.setOperations);
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   const openCommandPalette = useStore((s) => s.openCommandPalette);
@@ -133,7 +134,7 @@ function AppInner() {
         return result.value;
       };
 
-      const defaultSettings = { endpoint: '', headers: [] as [string,string][], editorFont: 'Geist Mono, monospace', fontSize: 'medium' as const, theme: 'noir' };
+      const defaultSettings = { endpoint: '', headers: [] as [string,string][], cookies: [] as [string,string][], editorFont: 'Geist Mono, monospace', fontSize: 'medium' as const, theme: 'noir' };
       const defaultLayout = { sidebarWidth: 192, bottomHeight: 180, docWidth: 300, responseFraction: 0.45, docOpen: false, sidebarCollapsed: false };
       const settings = check(settingsResult, 'settings', defaultSettings);
       const ops      = check(opsResult,      'operations', []);
@@ -143,6 +144,7 @@ function AppInner() {
 
       setEndpoint(settings.endpoint);
       setHeaders(settings.headers);
+      setCookies(settings.cookies);
       setEditorFont(settings.editorFont);
       setFontSize(settings.fontSize);
       setTheme(settings.theme);
@@ -164,7 +166,7 @@ function AppInner() {
       void refreshSchema();
     }
     void boot();
-  }, [setEndpoint, setHeaders, setOperations, setEditorFont, setFontSize, setOperationVariables, setTheme, setDocOpen, setSidebarCollapsed]);
+  }, [setEndpoint, setHeaders, setCookies, setOperations, setEditorFont, setFontSize, setOperationVariables, setTheme, setDocOpen, setSidebarCollapsed]);
 
   // Persist pane sizes, doc-panel open state, and sidebar collapsed state, debounced,
   // once the initial layout has actually been hydrated from the DB (otherwise the

@@ -161,6 +161,7 @@ async function seedDefaultTestData(conn: Database): Promise<void> {
 export async function loadSettings(): Promise<{
   endpoint: string;
   headers: [string, string][];
+  cookies: [string, string][];
   editorFont: string;
   fontSize: FontSizePreset;
   theme: string;
@@ -171,8 +172,12 @@ export async function loadSettings(): Promise<{
   );
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
   let headers: [string, string][] = [];
+  let cookies: [string, string][] = [];
   try {
     headers = JSON.parse(map['headers'] ?? '[]');
+  } catch {}
+  try {
+    cookies = JSON.parse(map['cookies'] ?? '[]');
   } catch {}
   // `font_size` supersedes the legacy numeric `editor_font_size` px setting;
   // fall back to mapping the old value so existing installs keep a sensible size.
@@ -183,6 +188,7 @@ export async function loadSettings(): Promise<{
   return {
     endpoint: map['endpoint'] ?? '',
     headers,
+    cookies,
     editorFont: map['editor_font'] ?? 'Geist Mono, monospace',
     fontSize,
     theme: map['theme'] ?? 'noir',
@@ -192,6 +198,7 @@ export async function loadSettings(): Promise<{
 export async function saveSettings(
   endpoint: string,
   headers: [string, string][],
+  cookies: [string, string][],
   editorFont: string,
   fontSize: FontSizePreset,
 ): Promise<void> {
@@ -199,6 +206,7 @@ export async function saveSettings(
   const pairs: [string, string][] = [
     ['endpoint', endpoint],
     ['headers', JSON.stringify(headers)],
+    ['cookies', JSON.stringify(cookies)],
     ['editor_font', editorFont],
     ['font_size', fontSize],
   ];

@@ -221,7 +221,7 @@ function tryPrettyJson(s: string): string {
 }
 
 export async function refreshSchema(): Promise<void> {
-  const { endpoint, headers, setSchemaStatus } = useStore.getState();
+  const { endpoint, headers, cookies, setSchemaStatus } = useStore.getState();
   console.log('[hex] refreshSchema: endpoint =', endpoint);
   if (!endpoint) {
     console.log('[hex] refreshSchema: no endpoint, skipping');
@@ -230,8 +230,9 @@ export async function refreshSchema(): Promise<void> {
   setSchemaStatus('loading');
   try {
     const headersMap = Object.fromEntries(headers);
+    const cookiesMap = Object.fromEntries(cookies);
     console.log('[hex] refreshSchema: fetching introspection from', endpoint);
-    const introspection = await fetchIntrospection(endpoint, headersMap);
+    const introspection = await fetchIntrospection(endpoint, headersMap, cookiesMap);
     console.log('[hex] refreshSchema: introspection fetched, keys =', Object.keys(introspection));
 
     builtSchema = buildClientSchema(introspection);

@@ -49,4 +49,4 @@ The compiled app will be in `src-tauri/target/release/bundle/`.
 - **Frontend** — React 19, TypeScript, Vite, Tailwind CSS, Zustand
 - **Editor** — Monaco + monaco-graphql
 - **Backend** — Tauri 2 (Rust), reqwest
-- **Storage** — SQLite via `@tauri-apps/plugin-sql` (saves endpoint, headers, operations, variables, theme)
+- **Storage** — SQLite via `@tauri-apps/plugin-sql` (saves endpoint, headers, cookies, operations, variables, theme)
