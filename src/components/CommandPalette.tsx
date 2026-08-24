@@ -168,7 +168,7 @@ export function CommandPalette({ onNavigateOperation }: Props) {
       >
         <div className="flex items-center gap-2 px-3 h-11 border-b border-navy-700 shrink-0">
           {mode === 'commands' ? (
-            <Command size={14} className="text-violet-400 shrink-0" />
+            <Command size={14} className="text-accent shrink-0" />
           ) : (
             <Search size={14} className="text-slate-500 shrink-0" />
           )}
@@ -205,7 +205,7 @@ export function CommandPalette({ onNavigateOperation }: Props) {
               {item.isDoc ? (
                 <BookOpen size={12} className="text-slate-600 shrink-0" />
               ) : item.isCommand ? (
-                <Command size={12} className="text-violet-400 shrink-0" />
+                <Command size={12} className="text-accent shrink-0" />
               ) : (
                 <span className="w-3 shrink-0" />
               )}

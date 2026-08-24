@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { DocTarget } from '../lib/graphql';
 import type { FontSizePreset } from '../lib/uiScale';
+import type { ThemeId } from '../lib/themes';
 
 export interface Operation {
   id: number;
@@ -42,7 +43,7 @@ interface AppState {
   // Editor appearance
   editorFont: string;
   fontSize: FontSizePreset;
-  theme: string;
+  theme: ThemeId;
 
   // Schema
   schemaStatus: 'none' | 'loading' | 'loaded' | 'error';
@@ -87,7 +88,7 @@ interface AppState {
   requestUnfoldAll: () => void;
   setEditorFont: (v: string) => void;
   setFontSize: (v: FontSizePreset) => void;
-  setTheme: (v: string) => void;
+  setTheme: (v: ThemeId) => void;
   setSettingsOpen: (v: boolean) => void;
   setCommandPaletteOpen: (v: boolean) => void;
   openCommandPalette: (mode: CommandPaletteMode) => void;

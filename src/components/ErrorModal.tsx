@@ -16,13 +16,13 @@ export function ErrorModal({ title, detail, responseBody, onClose, actions }: Pr
       onClick={onClose}
     >
       <div
-        className="bg-navy-900 rounded-xl p-6 w-[560px] shadow-2xl border border-red-900/40 max-h-[85vh] flex flex-col"
+        className="bg-navy-900 rounded-xl p-6 w-[560px] shadow-2xl border border-danger-border max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 mb-4 shrink-0">
           <div className="flex items-center gap-2">
-            <AlertCircle size={16} className="text-red-400 shrink-0" />
-            <h2 className="text-base font-semibold text-red-400">{title}</h2>
+            <AlertCircle size={16} className="text-danger shrink-0" />
+            <h2 className="text-base font-semibold text-danger">{title}</h2>
           </div>
           <button
             onClick={onClose}

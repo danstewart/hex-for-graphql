@@ -34,7 +34,7 @@ export function ResponsePane() {
         <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500">
           Response
           {isExecuting && (
-            <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse align-middle" />
+            <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse align-middle" />
           )}
         </span>
       </div>

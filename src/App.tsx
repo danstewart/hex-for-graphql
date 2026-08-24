@@ -14,6 +14,7 @@ import { DocViewer } from './components/DocViewer';
 import { CommandPalette } from './components/CommandPalette';
 import { ErrorModal } from './components/ErrorModal';
 import { Toaster } from './components/Toaster';
+import { normalizeThemeId } from './lib/themes';
 
 class ErrorBoundary extends Component<
   { children: ReactNode },
@@ -30,7 +31,7 @@ class ErrorBoundary extends Component<
       const err = this.state.error as Error;
       return (
         <div className="h-screen flex flex-col items-center justify-center bg-navy-950 text-slate-100 p-8 gap-4">
-          <p className="text-red-400 font-semibold">Something went wrong</p>
+          <p className="text-danger font-semibold">Something went wrong</p>
           <pre className="text-xs text-slate-400 max-w-lg whitespace-pre-wrap">
             {err.message}
           </pre>
@@ -149,7 +150,7 @@ function AppInner() {
       setCookies(settings.cookies);
       setEditorFont(settings.editorFont);
       setFontSize(settings.fontSize);
-      setTheme(settings.theme);
+      setTheme(normalizeThemeId(settings.theme));
       setOperations(ops);
       setOperationVariables(opVars);
       setInitialContent(content);
@@ -213,7 +214,7 @@ function AppInner() {
       <Toolbar />
 
       {bootError && (
-        <div className="px-4 py-2 bg-red-900/40 border-b border-red-800 text-red-300 text-xs">
+        <div className="px-4 py-2 bg-danger-surface border-b border-danger-border text-danger text-xs">
           DB unavailable: {bootError}. Changes may not persist this session.
         </div>
       )}

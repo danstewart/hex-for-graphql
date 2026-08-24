@@ -1,6 +1,7 @@
 import Database from '@tauri-apps/plugin-sql';
 import type { Operation } from '../store';
 import { type FontSizePreset, isFontSizePreset, fontSizeFromLegacyPx } from './uiScale';
+import type { ThemeId } from './themes';
 
 let dbPromise: Promise<Database> | null = null;
 
@@ -277,7 +278,7 @@ export async function saveOperationVariables(name: string, variables: string): P
   );
 }
 
-export async function saveTheme(theme: string): Promise<void> {
+export async function saveTheme(theme: ThemeId): Promise<void> {
   const conn = await getDb();
   await conn.execute(
     `INSERT OR REPLACE INTO settings (key, value) VALUES ('theme', ?)`,
