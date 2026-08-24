@@ -65,6 +65,8 @@ function AppInner() {
   const setDocOpen = useStore((s) => s.setDocOpen);
   const sidebarCollapsed = useStore((s) => s.sidebarCollapsed);
   const setSidebarCollapsed = useStore((s) => s.setSidebarCollapsed);
+  const variablesCollapsed = useStore((s) => s.variablesCollapsed);
+  const setVariablesCollapsed = useStore((s) => s.setVariablesCollapsed);
 
   // null = still loading from DB; string (including '') = loaded
   const [initialContent, setInitialContent] = useState<string | null>(null);
@@ -135,7 +137,7 @@ function AppInner() {
       };
 
       const defaultSettings = { endpoint: '', headers: [] as [string,string][], cookies: [] as [string,string][], editorFont: 'Geist Mono, monospace', fontSize: 'medium' as const, theme: 'noir' };
-      const defaultLayout = { sidebarWidth: 192, bottomHeight: 180, docWidth: 300, responseFraction: 0.45, docOpen: false, sidebarCollapsed: false };
+      const defaultLayout = { sidebarWidth: 192, bottomHeight: 180, docWidth: 300, responseFraction: 0.45, docOpen: false, sidebarCollapsed: false, variablesCollapsed: false };
       const settings = check(settingsResult, 'settings', defaultSettings);
       const ops      = check(opsResult,      'operations', []);
       const content  = check(contentResult,  'editor content', '');
@@ -157,6 +159,7 @@ function AppInner() {
       setResponseFraction(layout.responseFraction);
       setDocOpen(layout.docOpen);
       setSidebarCollapsed(layout.sidebarCollapsed);
+      setVariablesCollapsed(layout.variablesCollapsed);
       layoutLoadedRef.current = true;
 
       if (failures.length > 0) {
@@ -166,18 +169,18 @@ function AppInner() {
       void refreshSchema();
     }
     void boot();
-  }, [setEndpoint, setHeaders, setCookies, setOperations, setEditorFont, setFontSize, setOperationVariables, setTheme, setDocOpen, setSidebarCollapsed]);
+  }, [setEndpoint, setHeaders, setCookies, setOperations, setEditorFont, setFontSize, setOperationVariables, setTheme, setDocOpen, setSidebarCollapsed, setVariablesCollapsed]);
 
-  // Persist pane sizes, doc-panel open state, and sidebar collapsed state, debounced,
+  // Persist pane sizes and open/collapsed panel states, debounced,
   // once the initial layout has actually been hydrated from the DB (otherwise the
   // pre-load defaults would immediately overwrite whatever was saved before this run).
   useEffect(() => {
     if (!layoutLoadedRef.current) return;
     const timer = setTimeout(() => {
-      void saveLayout({ sidebarWidth, bottomHeight, docWidth, responseFraction, docOpen, sidebarCollapsed });
+      void saveLayout({ sidebarWidth, bottomHeight, docWidth, responseFraction, docOpen, sidebarCollapsed, variablesCollapsed });
     }, 500);
     return () => clearTimeout(timer);
-  }, [sidebarWidth, bottomHeight, docWidth, responseFraction, docOpen, sidebarCollapsed]);
+  }, [sidebarWidth, bottomHeight, docWidth, responseFraction, docOpen, sidebarCollapsed, variablesCollapsed]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -264,18 +267,22 @@ function AppInner() {
             </div>
           </div>
 
-          <Resizer
-            axis="y"
-            size={bottomHeight}
-            min={60}
-            max={400}
-            onResize={setBottomHeight}
-          />
+          {!variablesCollapsed && (
+            <>
+              <Resizer
+                axis="y"
+                size={bottomHeight}
+                min={60}
+                max={400}
+                onResize={setBottomHeight}
+              />
 
-          {/* Variables panel */}
-          <div style={{ height: bottomHeight, flexShrink: 0 }} className="border-t border-navy-700 overflow-hidden">
-            <BottomPanel />
-          </div>
+              {/* Variables panel */}
+              <div style={{ height: bottomHeight, flexShrink: 0 }} className="border-t border-navy-700 overflow-hidden">
+                <BottomPanel />
+              </div>
+            </>
+          )}
         </div>
 
         {/* Doc viewer (right sidebar) */}
