@@ -20,6 +20,8 @@ const BASE_EDITOR_OPTIONS: Monaco.editor.IStandaloneEditorConstructionOptions = 
   lineNumbers: 'on',
   scrollBeyondLastLine: false,
   wordWrap: 'off',
+  tabSize: 2,
+  insertSpaces: true,
   automaticLayout: true,
   padding: { top: 8 },
   renderLineHighlight: 'gutter',
