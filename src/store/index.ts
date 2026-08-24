@@ -31,6 +31,9 @@ interface AppState {
   // Signals (incrementing counter pattern — avoids re-render storms from boolean flips)
   executeRequested: number;
   formatRequested: number;
+  formatAllRequested: number;
+  foldOperationsRequested: number;
+  unfoldAllRequested: number;
 
   // Editor appearance
   editorFont: string;
@@ -72,6 +75,9 @@ interface AppState {
   setIsExecuting: (v: boolean) => void;
   requestExecute: () => void;
   requestFormat: () => void;
+  requestFormatAll: () => void;
+  requestFoldOperations: () => void;
+  requestUnfoldAll: () => void;
   setEditorFont: (v: string) => void;
   setFontSize: (v: FontSizePreset) => void;
   setTheme: (v: string) => void;
@@ -96,6 +102,9 @@ export const useStore = create<AppState>((set) => ({
   isExecuting: false,
   executeRequested: 0,
   formatRequested: 0,
+  formatAllRequested: 0,
+  foldOperationsRequested: 0,
+  unfoldAllRequested: 0,
   editorFont: 'Geist Mono, monospace',
   fontSize: 'medium',
   theme: 'noir',
@@ -142,6 +151,9 @@ export const useStore = create<AppState>((set) => ({
   setIsExecuting: (isExecuting) => set({ isExecuting }),
   requestExecute: () => set((s) => ({ executeRequested: s.executeRequested + 1 })),
   requestFormat: () => set((s) => ({ formatRequested: s.formatRequested + 1 })),
+  requestFormatAll: () => set((s) => ({ formatAllRequested: s.formatAllRequested + 1 })),
+  requestFoldOperations: () => set((s) => ({ foldOperationsRequested: s.foldOperationsRequested + 1 })),
+  requestUnfoldAll: () => set((s) => ({ unfoldAllRequested: s.unfoldAllRequested + 1 })),
   setEditorFont: (editorFont) => set({ editorFont }),
   setFontSize: (fontSize) => set({ fontSize }),
   setTheme: (theme) => set({ theme }),

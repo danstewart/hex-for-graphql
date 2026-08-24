@@ -96,7 +96,7 @@ export function Toolbar() {
 
       <button
         onClick={() => setCommandPaletteOpen(true)}
-        title="Command Palette (⌘P)"
+        title="Command Palette (⌘⇧P)"
         className="w-8 h-8 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-navy-800 transition-colors"
       >
         <Search size={15} />
