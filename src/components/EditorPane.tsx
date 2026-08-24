@@ -206,9 +206,12 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       editor.trigger('keyboard', 'editor.action.triggerSuggest', {});
     });
 
-    // ⌘⇧P opens the command palette.
+    // ⌘P opens operation/schema navigation; ⌘⇧P opens executable commands.
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyP, () => {
+      useStore.getState().openCommandPalette('navigate');
+    });
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyP, () => {
-      useStore.getState().setCommandPaletteOpen(true);
+      useStore.getState().openCommandPalette('commands');
     });
 
     // ⌘↵ runs the operation at the cursor.

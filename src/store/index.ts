@@ -10,6 +10,8 @@ export interface Operation {
   last_run_at: string | null;
 }
 
+export type CommandPaletteMode = 'navigate' | 'commands';
+
 interface AppState {
   // Connection settings
   endpoint: string;
@@ -52,6 +54,7 @@ interface AppState {
   // Modals
   settingsOpen: boolean;
   commandPaletteOpen: boolean;
+  commandPaletteMode: CommandPaletteMode;
   errorModal: { title: string; detail: string; responseBody?: string } | null;
 
   // Doc viewer
@@ -83,6 +86,7 @@ interface AppState {
   setTheme: (v: string) => void;
   setSettingsOpen: (v: boolean) => void;
   setCommandPaletteOpen: (v: boolean) => void;
+  openCommandPalette: (mode: CommandPaletteMode) => void;
   setErrorModal: (v: { title: string; detail: string; responseBody?: string } | null) => void;
   setSchemaStatus: (status: 'none' | 'loading' | 'loaded' | 'error', error?: string) => void;
   setDocOpen: (v: boolean) => void;
@@ -117,6 +121,7 @@ export const useStore = create<AppState>((set) => ({
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
   settingsOpen: false,
   commandPaletteOpen: false,
+  commandPaletteMode: 'navigate',
   errorModal: null,
   docOpen: false,
   docTarget: null,
@@ -159,6 +164,7 @@ export const useStore = create<AppState>((set) => ({
   setTheme: (theme) => set({ theme }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setCommandPaletteOpen: (commandPaletteOpen) => set({ commandPaletteOpen }),
+  openCommandPalette: (commandPaletteMode) => set({ commandPaletteOpen: true, commandPaletteMode }),
   setErrorModal: (errorModal) => set({ errorModal }),
   setSchemaStatus: (schemaStatus, error) => set({ schemaStatus, schemaError: error ?? null }),
   setDocOpen: (docOpen) => set({ docOpen }),

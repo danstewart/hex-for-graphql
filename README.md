@@ -8,7 +8,8 @@ A desktop GraphQL client with an IDE-like editing experience.
 - **Schema introspection** — automatically fetches your API's schema to power completions and docs
 - **Integrated docs browser** — browse types and fields; Cmd/Ctrl+click in the editor to navigate to a type
 - **Saved operations** — operations are persisted and grouped by type in the sidebar
-- **Command palette** (Cmd+P) — quickly find saved operations or search the schema
+- **Quick Open** (Cmd+P) — quickly find saved operations or search the schema
+- **Command palette** (Cmd+Shift+P) — format, fold, run, or refresh from the keyboard
 - **Variables panel** — per-operation variable storage with JSON editing
 
 ## Screenshot

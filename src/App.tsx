@@ -52,7 +52,7 @@ function AppInner() {
   const setHeaders = useStore((s) => s.setHeaders);
   const setOperations = useStore((s) => s.setOperations);
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
-  const setCommandPaletteOpen = useStore((s) => s.setCommandPaletteOpen);
+  const openCommandPalette = useStore((s) => s.openCommandPalette);
   const errorModal = useStore((s) => s.errorModal);
   const setErrorModal = useStore((s) => s.setErrorModal);
   const theme = useStore((s) => s.theme);
@@ -186,14 +186,14 @@ function AppInner() {
       if ((e.metaKey || e.ctrlKey) && e.key === ',') {
         e.preventDefault();
         setSettingsOpen(true);
-      } else if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'p') {
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
         e.preventDefault();
-        setCommandPaletteOpen(true);
+        openCommandPalette(e.shiftKey ? 'commands' : 'navigate');
       }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [setSettingsOpen, setCommandPaletteOpen]);
+  }, [setSettingsOpen, openCommandPalette]);
 
   const handleNavigate = useCallback((name: string) => {
     setNavigateTo(name);

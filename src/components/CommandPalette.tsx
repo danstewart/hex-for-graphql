@@ -19,6 +19,7 @@ interface PaletteItem {
 
 export function CommandPalette({ onNavigateOperation }: Props) {
   const open = useStore((s) => s.commandPaletteOpen);
+  const mode = useStore((s) => s.commandPaletteMode);
   const setOpen = useStore((s) => s.setCommandPaletteOpen);
   const operations = useStore((s) => s.operations);
   const schemaStatus = useStore((s) => s.schemaStatus);
@@ -39,7 +40,7 @@ export function CommandPalette({ onNavigateOperation }: Props) {
     setSelected(0);
     const id = setTimeout(() => inputRef.current?.focus(), 0);
     return () => clearTimeout(id);
-  }, [open]);
+  }, [open, mode]);
 
   const items = useMemo<PaletteItem[]>(() => {
     const q = query.trim();
@@ -88,6 +89,8 @@ export function CommandPalette({ onNavigateOperation }: Props) {
       },
     ].filter((item) => !q || item.label.toLowerCase().includes(qLower));
 
+    if (mode === 'commands') return commandItems;
+
     const opItems: PaletteItem[] = operations
       .filter((op) => !q || op.name.toLowerCase().includes(qLower))
       .map((op) => ({
@@ -100,7 +103,7 @@ export function CommandPalette({ onNavigateOperation }: Props) {
         },
       }));
 
-    if (!q) return [...commandItems, ...opItems];
+    if (!q) return opItems;
 
     const schema = schemaStatus === 'loaded' ? getBuiltSchema() : null;
     const schemaItems: PaletteItem[] = schema
@@ -117,9 +120,10 @@ export function CommandPalette({ onNavigateOperation }: Props) {
         }))
       : [];
 
-    return [...commandItems, ...opItems, ...schemaItems];
+    return [...opItems, ...schemaItems];
   }, [
     query,
+    mode,
     operations,
     schemaStatus,
     onNavigateOperation,
@@ -163,13 +167,19 @@ export function CommandPalette({ onNavigateOperation }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 px-3 h-11 border-b border-navy-700 shrink-0">
-          <Search size={14} className="text-slate-500 shrink-0" />
+          {mode === 'commands' ? (
+            <Command size={14} className="text-violet-400 shrink-0" />
+          ) : (
+            <Search size={14} className="text-slate-500 shrink-0" />
+          )}
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search commands, operations, types, or fields…"
+            placeholder={mode === 'commands'
+              ? 'Search commands…'
+              : 'Jump to an operation, type, or field…'}
             className="flex-1 bg-transparent text-sm text-slate-200 placeholder-slate-600 outline-none"
             autoCorrect="off"
             autoCapitalize="off"
