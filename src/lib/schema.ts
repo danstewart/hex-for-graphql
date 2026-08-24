@@ -165,7 +165,12 @@ function registerCompletionProvider(schema: GraphQLSchema): void {
       try {
         const items = getAutocompleteSuggestions(schema, document, pos);
         const used = usedFieldsAtCursor(document, position.lineNumber - 1, position.column - 1);
-        const filtered = used.size > 0 ? items.filter((e) => !used.has(e.label)) : items;
+        const currentWord = model.getWordUntilPosition(position).word;
+        // The parser treats the word being typed as an already-selected field. Keep an
+        // exact match so Monaco can rank it ahead of longer fuzzy matches.
+        const filtered = used.size > 0
+          ? items.filter((entry) => !used.has(entry.label) || entry.label === currentWord)
+          : items;
         return {
           incomplete: true,
           suggestions: filtered.map((entry) => {
