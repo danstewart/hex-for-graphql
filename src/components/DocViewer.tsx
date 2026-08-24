@@ -2,10 +2,10 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { ChevronRight, ChevronDown, X } from 'lucide-react';
 import {
   isObjectType, isInputObjectType, isEnumType, isScalarType,
-  isInterfaceType, isUnionType,
+  isInterfaceType, isUnionType, getNamedType,
 } from 'graphql';
 import type {
-  GraphQLField, GraphQLArgument, GraphQLObjectType,
+  GraphQLField, GraphQLArgument, GraphQLObjectType, GraphQLInputField,
 } from 'graphql';
 import { useStore } from '../store';
 import { getBuiltSchema } from '../lib/schema';
@@ -68,23 +68,26 @@ interface FieldRowProps {
   typeStr: string;
   description?: string | null;
   args?: readonly GraphQLArgument[];
+  hasChildren?: boolean;
+  children?: React.ReactNode;
   indent: number;
   expanded: boolean;
   onToggle: () => void;
   onNavigate?: (name: string) => void;
 }
 
-function FieldRow({ id, name, typeStr, description, args, indent, expanded, onToggle, onNavigate }: FieldRowProps) {
+function FieldRow({ id, name, typeStr, description, args, hasChildren = false, children, indent, expanded, onToggle, onNavigate }: FieldRowProps) {
   const hasArgs = !!(args && args.length > 0);
+  const isCollapsible = hasArgs || hasChildren;
   return (
     <>
       <button
         id={id}
-        onClick={hasArgs ? onToggle : undefined}
+        onClick={isCollapsible ? onToggle : undefined}
         className="w-full text-left flex items-center gap-1 py-[3px] hover:bg-navy-800/40 transition-colors text-[11px]"
         style={{ paddingLeft: 8 + indent * 12 }}
       >
-        <ToggleIcon open={hasArgs ? expanded : null} />
+        <ToggleIcon open={isCollapsible ? expanded : null} />
         <span className="text-slate-200 font-mono">{name}</span>
         <span className="text-slate-600 mx-0.5">:</span>
         <TypeRef t={typeStr} onNavigate={onNavigate} />
@@ -97,6 +100,7 @@ function FieldRow({ id, name, typeStr, description, args, indent, expanded, onTo
           <ArgList args={args!} onNavigate={onNavigate} />
         </div>
       )}
+      {expanded && hasChildren && children}
     </>
   );
 }
@@ -237,6 +241,10 @@ export function DocViewer() {
   function renderRootFields(type: GraphQLObjectType) {
     return Object.entries(type.getFields()).map(([fname, field]) => {
       const key = `f:${type.name}.${fname}`;
+      const open = expanded.has(key);
+      const path = `${type.name}.${fname}`;
+      const visited = new Set([type.name]);
+      const hasChildren = hasOutputFields(field, visited);
       return (
         <FieldRow
           key={key}
@@ -245,11 +253,104 @@ export function DocViewer() {
           typeStr={field.type.toString()}
           description={field.description}
           args={field.args}
+          hasChildren={hasChildren}
           indent={1}
-          expanded={expanded.has(key)}
+          expanded={open}
           onToggle={() => toggle(key)}
           onNavigate={navigateToTarget}
-        />
+        >
+          {open && hasChildren ? renderOutputFields(field, path, 2, visited) : null}
+        </FieldRow>
+      );
+    });
+  }
+
+  function hasOutputFields(
+    field: GraphQLField<unknown, unknown>,
+    visited: ReadonlySet<string>,
+  ) {
+    const namedType = getNamedType(field.type);
+    return (isObjectType(namedType) || isInterfaceType(namedType))
+      && !visited.has(namedType.name)
+      && Object.keys(namedType.getFields()).length > 0;
+  }
+
+  function renderOutputFields(
+    field: GraphQLField<unknown, unknown>,
+    path: string,
+    indent: number,
+    visited: ReadonlySet<string>,
+  ): React.ReactNode {
+    const namedType = getNamedType(field.type);
+    if ((!isObjectType(namedType) && !isInterfaceType(namedType)) || visited.has(namedType.name)) {
+      return null;
+    }
+
+    const nextVisited = new Set(visited).add(namedType.name);
+    return Object.entries(namedType.getFields()).map(([fname, childField]) => {
+      const childPath = `${path}.${fname}`;
+      const key = `nf:${childPath}`;
+      const open = expanded.has(key);
+      const hasChildren = hasOutputFields(childField, nextVisited);
+      return (
+        <FieldRow
+          key={key}
+          name={fname}
+          typeStr={childField.type.toString()}
+          description={childField.description}
+          args={childField.args}
+          hasChildren={hasChildren}
+          indent={indent}
+          expanded={open}
+          onToggle={() => toggle(key)}
+          onNavigate={navigateToTarget}
+        >
+          {open && hasChildren
+            ? renderOutputFields(childField, childPath, indent + 1, nextVisited)
+            : null}
+        </FieldRow>
+      );
+    });
+  }
+
+  function hasInputFields(field: GraphQLInputField, visited: ReadonlySet<string>) {
+    const namedType = getNamedType(field.type);
+    return isInputObjectType(namedType)
+      && !visited.has(namedType.name)
+      && Object.keys(namedType.getFields()).length > 0;
+  }
+
+  function renderNestedInputFields(
+    field: GraphQLInputField,
+    path: string,
+    indent: number,
+    visited: ReadonlySet<string>,
+  ): React.ReactNode {
+    const namedType = getNamedType(field.type);
+    if (!isInputObjectType(namedType) || visited.has(namedType.name)) return null;
+
+    const nextVisited = new Set(visited).add(namedType.name);
+    return Object.entries(namedType.getFields()).map(([fname, childField]) => {
+      const childPath = `${path}.${fname}`;
+      const key = `nif:${childPath}`;
+      const open = expanded.has(key);
+      const hasChildren = hasInputFields(childField, nextVisited);
+      return (
+        <FieldRow
+          key={key}
+          name={fname}
+          typeStr={childField.type.toString()}
+          description={childField.description}
+          hasChildren={hasChildren}
+          indent={indent}
+          expanded={open}
+          onToggle={() => toggle(key)}
+          onNavigate={navigateToTarget}
+        >
+          {open && hasChildren
+            ? renderNestedInputFields(childField, childPath, indent + 1, nextVisited)
+            : null}
+        </FieldRow>
       );
     });
   }
@@ -315,17 +416,26 @@ export function DocViewer() {
         </button>
         {open && Object.entries(type.getFields()).map(([fname, field]) => {
           const key = `if:${typeName}.${fname}`;
+          const fieldOpen = expanded.has(key);
+          const path = `${typeName}.${fname}`;
+          const visited = new Set([typeName]);
+          const hasChildren = hasInputFields(field, visited);
           return (
             <FieldRow
               key={key}
               name={fname}
               typeStr={field.type.toString()}
               description={field.description}
+              hasChildren={hasChildren}
               indent={2}
-              expanded={expanded.has(key)}
+              expanded={fieldOpen}
               onToggle={() => toggle(key)}
               onNavigate={navigateToTarget}
-            />
+            >
+              {fieldOpen && hasChildren
+                ? renderNestedInputFields(field, path, 3, visited)
+                : null}
+            </FieldRow>
           );
         })}
       </div>
