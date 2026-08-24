@@ -158,7 +158,7 @@ function AppInner() {
       layoutLoadedRef.current = true;
 
       if (failures.length > 0) {
-        setBootError(`Failed to load: ${failures.join(', ')}. These will not persist this session.`);
+        setBootError(`Failed to load: ${failures.join(', ')}`);
       }
 
       void refreshSchema();
@@ -209,7 +209,7 @@ function AppInner() {
 
       {bootError && (
         <div className="px-4 py-2 bg-red-900/40 border-b border-red-800 text-red-300 text-xs">
-          DB unavailable: {bootError}. Settings won't persist.
+          DB unavailable: {bootError}. Changes may not persist this session.
         </div>
       )}
 
