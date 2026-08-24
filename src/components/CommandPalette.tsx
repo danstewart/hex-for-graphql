@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Search, BookOpen } from 'lucide-react';
+import { Search, BookOpen, Command } from 'lucide-react';
 import { useStore } from '../store';
-import { getBuiltSchema } from '../lib/schema';
+import { getBuiltSchema, refreshSchema } from '../lib/schema';
 import { buildSchemaSearchResults } from '../lib/schemaSearch';
 
 interface Props {
@@ -13,16 +13,22 @@ interface PaletteItem {
   label: string;
   sublabel: string;
   isDoc?: boolean;
+  isCommand?: boolean;
   onSelect: () => void;
 }
 
 export function CommandPalette({ onNavigateOperation }: Props) {
   const open = useStore((s) => s.commandPaletteOpen);
+  const mode = useStore((s) => s.commandPaletteMode);
   const setOpen = useStore((s) => s.setCommandPaletteOpen);
   const operations = useStore((s) => s.operations);
   const schemaStatus = useStore((s) => s.schemaStatus);
   const setDocOpen = useStore((s) => s.setDocOpen);
   const setDocTarget = useStore((s) => s.setDocTarget);
+  const requestFormatAll = useStore((s) => s.requestFormatAll);
+  const requestFoldOperations = useStore((s) => s.requestFoldOperations);
+  const requestUnfoldAll = useStore((s) => s.requestUnfoldAll);
+  const requestExecute = useStore((s) => s.requestExecute);
 
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(0);
@@ -34,11 +40,56 @@ export function CommandPalette({ onNavigateOperation }: Props) {
     setSelected(0);
     const id = setTimeout(() => inputRef.current?.focus(), 0);
     return () => clearTimeout(id);
-  }, [open]);
+  }, [open, mode]);
 
   const items = useMemo<PaletteItem[]>(() => {
     const q = query.trim();
     const qLower = q.toLowerCase();
+
+    const runCommand = (action: () => void) => () => {
+      setOpen(false);
+      action();
+    };
+
+    const commandItems: PaletteItem[] = [
+      {
+        key: 'command:format-all',
+        label: 'Format All',
+        sublabel: 'command',
+        isCommand: true,
+        onSelect: runCommand(requestFormatAll),
+      },
+      {
+        key: 'command:fold-all',
+        label: 'Fold All',
+        sublabel: 'command',
+        isCommand: true,
+        onSelect: runCommand(requestFoldOperations),
+      },
+      {
+        key: 'command:unfold-all',
+        label: 'Unfold All',
+        sublabel: 'command',
+        isCommand: true,
+        onSelect: runCommand(requestUnfoldAll),
+      },
+      {
+        key: 'command:refresh-schema',
+        label: 'Refresh Schema',
+        sublabel: 'command',
+        isCommand: true,
+        onSelect: runCommand(() => { void refreshSchema(); }),
+      },
+      {
+        key: 'command:run-current',
+        label: 'Run Current',
+        sublabel: 'command',
+        isCommand: true,
+        onSelect: runCommand(requestExecute),
+      },
+    ].filter((item) => !q || item.label.toLowerCase().includes(qLower));
+
+    if (mode === 'commands') return commandItems;
 
     const opItems: PaletteItem[] = operations
       .filter((op) => !q || op.name.toLowerCase().includes(qLower))
@@ -70,7 +121,20 @@ export function CommandPalette({ onNavigateOperation }: Props) {
       : [];
 
     return [...opItems, ...schemaItems];
-  }, [query, operations, schemaStatus, onNavigateOperation, setOpen, setDocOpen, setDocTarget]);
+  }, [
+    query,
+    mode,
+    operations,
+    schemaStatus,
+    onNavigateOperation,
+    setOpen,
+    setDocOpen,
+    setDocTarget,
+    requestFormatAll,
+    requestFoldOperations,
+    requestUnfoldAll,
+    requestExecute,
+  ]);
 
   useEffect(() => {
     setSelected(0);
@@ -103,13 +167,19 @@ export function CommandPalette({ onNavigateOperation }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 px-3 h-11 border-b border-navy-700 shrink-0">
-          <Search size={14} className="text-slate-500 shrink-0" />
+          {mode === 'commands' ? (
+            <Command size={14} className="text-violet-400 shrink-0" />
+          ) : (
+            <Search size={14} className="text-slate-500 shrink-0" />
+          )}
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Jump to an operation, type, or field…"
+            placeholder={mode === 'commands'
+              ? 'Search commands…'
+              : 'Jump to an operation, type, or field…'}
             className="flex-1 bg-transparent text-sm text-slate-200 placeholder-slate-600 outline-none"
             autoCorrect="off"
             autoCapitalize="off"
@@ -132,10 +202,13 @@ export function CommandPalette({ onNavigateOperation }: Props) {
                 i === selected ? 'bg-navy-800 text-slate-100' : 'text-slate-400'
               }`}
             >
-              {item.isDoc
-                ? <BookOpen size={12} className="text-slate-600 shrink-0" />
-                : <span className="w-3 shrink-0" />
-              }
+              {item.isDoc ? (
+                <BookOpen size={12} className="text-slate-600 shrink-0" />
+              ) : item.isCommand ? (
+                <Command size={12} className="text-violet-400 shrink-0" />
+              ) : (
+                <span className="w-3 shrink-0" />
+              )}
               <span className="truncate min-w-0 flex-1">{item.label}</span>
               <span className="max-w-[50%] truncate text-[11px] text-slate-600 shrink font-sans">
                 {item.sublabel}

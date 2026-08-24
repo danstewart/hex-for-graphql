@@ -148,6 +148,24 @@ export function formatOperationAtLine(
   return null;
 }
 
+// Returns the 1-based lines containing the opening braces for each top-level query or
+// mutation selection set. Monaco can use these lines to fold just the operation bodies,
+// leaving nested selection sets and fragment definitions alone.
+export function getOperationFoldLines(doc: string): number[] {
+  try {
+    const ast = parse(doc, { noLocation: false });
+    return ast.definitions
+      .filter(
+        (d): d is OperationDefinitionNode =>
+          d.kind === Kind.OPERATION_DEFINITION &&
+          (d.operation === 'query' || d.operation === 'mutation'),
+      )
+      .flatMap((d) => d.selectionSet.loc ? [d.selectionSet.loc.startToken.line] : []);
+  } catch {
+    return [];
+  }
+}
+
 // Returns the 1-based start line of a named operation, or null if not found.
 export function findOperationLine(doc: string, name: string): number | null {
   try {

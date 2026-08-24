@@ -10,6 +10,8 @@ export interface Operation {
   last_run_at: string | null;
 }
 
+export type CommandPaletteMode = 'navigate' | 'commands';
+
 interface AppState {
   // Connection settings
   endpoint: string;
@@ -31,6 +33,9 @@ interface AppState {
   // Signals (incrementing counter pattern — avoids re-render storms from boolean flips)
   executeRequested: number;
   formatRequested: number;
+  formatAllRequested: number;
+  foldOperationsRequested: number;
+  unfoldAllRequested: number;
 
   // Editor appearance
   editorFont: string;
@@ -49,6 +54,7 @@ interface AppState {
   // Modals
   settingsOpen: boolean;
   commandPaletteOpen: boolean;
+  commandPaletteMode: CommandPaletteMode;
   errorModal: { title: string; detail: string; responseBody?: string } | null;
 
   // Doc viewer
@@ -72,11 +78,15 @@ interface AppState {
   setIsExecuting: (v: boolean) => void;
   requestExecute: () => void;
   requestFormat: () => void;
+  requestFormatAll: () => void;
+  requestFoldOperations: () => void;
+  requestUnfoldAll: () => void;
   setEditorFont: (v: string) => void;
   setFontSize: (v: FontSizePreset) => void;
   setTheme: (v: string) => void;
   setSettingsOpen: (v: boolean) => void;
   setCommandPaletteOpen: (v: boolean) => void;
+  openCommandPalette: (mode: CommandPaletteMode) => void;
   setErrorModal: (v: { title: string; detail: string; responseBody?: string } | null) => void;
   setSchemaStatus: (status: 'none' | 'loading' | 'loaded' | 'error', error?: string) => void;
   setDocOpen: (v: boolean) => void;
@@ -96,6 +106,9 @@ export const useStore = create<AppState>((set) => ({
   isExecuting: false,
   executeRequested: 0,
   formatRequested: 0,
+  formatAllRequested: 0,
+  foldOperationsRequested: 0,
+  unfoldAllRequested: 0,
   editorFont: 'Geist Mono, monospace',
   fontSize: 'medium',
   theme: 'noir',
@@ -108,6 +121,7 @@ export const useStore = create<AppState>((set) => ({
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
   settingsOpen: false,
   commandPaletteOpen: false,
+  commandPaletteMode: 'navigate',
   errorModal: null,
   docOpen: false,
   docTarget: null,
@@ -142,11 +156,15 @@ export const useStore = create<AppState>((set) => ({
   setIsExecuting: (isExecuting) => set({ isExecuting }),
   requestExecute: () => set((s) => ({ executeRequested: s.executeRequested + 1 })),
   requestFormat: () => set((s) => ({ formatRequested: s.formatRequested + 1 })),
+  requestFormatAll: () => set((s) => ({ formatAllRequested: s.formatAllRequested + 1 })),
+  requestFoldOperations: () => set((s) => ({ foldOperationsRequested: s.foldOperationsRequested + 1 })),
+  requestUnfoldAll: () => set((s) => ({ unfoldAllRequested: s.unfoldAllRequested + 1 })),
   setEditorFont: (editorFont) => set({ editorFont }),
   setFontSize: (fontSize) => set({ fontSize }),
   setTheme: (theme) => set({ theme }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setCommandPaletteOpen: (commandPaletteOpen) => set({ commandPaletteOpen }),
+  openCommandPalette: (commandPaletteMode) => set({ commandPaletteOpen: true, commandPaletteMode }),
   setErrorModal: (errorModal) => set({ errorModal }),
   setSchemaStatus: (schemaStatus, error) => set({ schemaStatus, schemaError: error ?? null }),
   setDocOpen: (docOpen) => set({ docOpen }),

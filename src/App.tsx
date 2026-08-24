@@ -52,7 +52,7 @@ function AppInner() {
   const setHeaders = useStore((s) => s.setHeaders);
   const setOperations = useStore((s) => s.setOperations);
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
-  const setCommandPaletteOpen = useStore((s) => s.setCommandPaletteOpen);
+  const openCommandPalette = useStore((s) => s.openCommandPalette);
   const errorModal = useStore((s) => s.errorModal);
   const setErrorModal = useStore((s) => s.setErrorModal);
   const theme = useStore((s) => s.theme);
@@ -158,7 +158,7 @@ function AppInner() {
       layoutLoadedRef.current = true;
 
       if (failures.length > 0) {
-        setBootError(`Failed to load: ${failures.join(', ')}. These will not persist this session.`);
+        setBootError(`Failed to load: ${failures.join(', ')}`);
       }
 
       void refreshSchema();
@@ -188,12 +188,12 @@ function AppInner() {
         setSettingsOpen(true);
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
         e.preventDefault();
-        setCommandPaletteOpen(true);
+        openCommandPalette(e.shiftKey ? 'commands' : 'navigate');
       }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [setSettingsOpen, setCommandPaletteOpen]);
+  }, [setSettingsOpen, openCommandPalette]);
 
   const handleNavigate = useCallback((name: string) => {
     setNavigateTo(name);
@@ -209,7 +209,7 @@ function AppInner() {
 
       {bootError && (
         <div className="px-4 py-2 bg-red-900/40 border-b border-red-800 text-red-300 text-xs">
-          DB unavailable: {bootError}. Settings won't persist.
+          DB unavailable: {bootError}. Changes may not persist this session.
         </div>
       )}
 
