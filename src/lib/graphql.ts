@@ -1,5 +1,5 @@
 import { parse, print, visit, visitWithTypeInfo, TypeInfo, Kind, getIntrospectionQuery } from 'graphql';
-import type { OperationDefinitionNode, FragmentDefinitionNode, IntrospectionQuery, GraphQLSchema } from 'graphql';
+import type { DocumentNode, OperationDefinitionNode, FragmentDefinitionNode, IntrospectionQuery, GraphQLSchema } from 'graphql';
 import { collectVariables, getVariablesJSONSchema } from 'graphql-language-service';
 import { invoke } from '@tauri-apps/api/core';
 import type { Operation } from '../store';
@@ -7,6 +7,26 @@ import type { Operation } from '../store';
 export interface DocTarget {
   typeName: string;
   fieldName?: string;
+}
+
+const documentCache = new Map<string, DocumentNode>();
+const MAX_CACHED_DOCUMENTS = 100;
+
+function parseDocument(source: string): DocumentNode {
+  const cached = documentCache.get(source);
+  if (cached) {
+    // Refresh recency so actively edited documents are retained.
+    documentCache.delete(source);
+    documentCache.set(source, cached);
+    return cached;
+  }
+
+  const document = parse(source, { noLocation: false });
+  documentCache.set(source, document);
+  if (documentCache.size > MAX_CACHED_DOCUMENTS) {
+    documentCache.delete(documentCache.keys().next().value!);
+  }
+  return document;
 }
 
 // Resolves the schema type/field under a character offset in a GraphQL document, so a
@@ -20,7 +40,7 @@ export function resolveDocTarget(
 ): DocTarget | null {
   let ast;
   try {
-    ast = parse(source, { noLocation: false });
+    ast = parseDocument(source);
   } catch {
     return null;
   }
@@ -66,7 +86,7 @@ export function getOperationVariablesSchema(
 ): Record<string, unknown> | null {
   let ast;
   try {
-    ast = parse(documentSource, { noLocation: false });
+    ast = parseDocument(documentSource);
   } catch {
     return null;
   }
@@ -95,7 +115,7 @@ export function parseDocumentOperations(
   doc: string,
 ): Pick<Operation, 'name' | 'type' | 'body'>[] {
   try {
-    const ast = parse(doc, { noLocation: false });
+    const ast = parseDocument(doc);
     return ast.definitions
       .filter(
         (d): d is OperationDefinitionNode =>
@@ -117,7 +137,7 @@ export function findOperationAtLine(
   line: number,
 ): string | null {
   try {
-    const ast = parse(doc, { noLocation: false });
+    const ast = parseDocument(doc);
     for (const d of ast.definitions) {
       if (d.kind !== Kind.OPERATION_DEFINITION || !d.name || !d.loc) continue;
       const start = d.loc.startToken.line;
@@ -135,7 +155,7 @@ export function formatOperationAtLine(
   line: number,
 ): { startLine: number; endLine: number; formatted: string } | null {
   try {
-    const ast = parse(doc, { noLocation: false });
+    const ast = parseDocument(doc);
     for (const d of ast.definitions) {
       if (d.kind !== Kind.OPERATION_DEFINITION || !d.loc) continue;
       const start = d.loc.startToken.line;
@@ -153,7 +173,7 @@ export function formatOperationAtLine(
 // leaving nested selection sets and fragment definitions alone.
 export function getOperationFoldLines(doc: string): number[] {
   try {
-    const ast = parse(doc, { noLocation: false });
+    const ast = parseDocument(doc);
     return ast.definitions
       .filter(
         (d): d is OperationDefinitionNode =>
@@ -169,7 +189,7 @@ export function getOperationFoldLines(doc: string): number[] {
 // Returns the 1-based start line of a named operation, or null if not found.
 export function findOperationLine(doc: string, name: string): number | null {
   try {
-    const ast = parse(doc, { noLocation: false });
+    const ast = parseDocument(doc);
     for (const d of ast.definitions) {
       if (
         d.kind === Kind.OPERATION_DEFINITION &&

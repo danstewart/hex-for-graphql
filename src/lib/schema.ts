@@ -13,6 +13,14 @@ let mode: GraphQLMode | null = null;
 // Built schema stored in the main thread for in-process completions.
 let builtSchema: GraphQLSchema | null = null;
 
+type IndexedFieldInfo = {
+  description: string;
+  returnTypeName: string;
+};
+
+// Built alongside the schema so completions do not scan every schema type per suggestion.
+let fieldInfoIndex = new Map<string, IndexedFieldInfo[]>();
+
 export function getBuiltSchema(): GraphQLSchema | null {
   return builtSchema;
 }
@@ -104,10 +112,25 @@ function resolveDocString(doc: unknown): string | null {
   return null;
 }
 
+function buildFieldInfoIndex(schema: GraphQLSchema): Map<string, IndexedFieldInfo[]> {
+  const index = new Map<string, IndexedFieldInfo[]>();
+  for (const type of Object.values(schema.getTypeMap())) {
+    if (!isObjectType(type) && !isInterfaceType(type)) continue;
+    for (const [fieldName, field] of Object.entries(type.getFields())) {
+      if (!field.description) continue;
+      const fields = index.get(fieldName) ?? [];
+      fields.push({ description: field.description, returnTypeName: getNamedType(field.type).name });
+      index.set(fieldName, fields);
+    }
+  }
+  return index;
+}
+
 // Look up a field's description and snippet from the schema directly, since
 // graphql-language-service often leaves documentation empty for field completions.
 function getFieldInfo(
   schema: GraphQLSchema,
+  fieldIndex: ReadonlyMap<string, IndexedFieldInfo[]>,
   label: string,
   detail: string | undefined,
 ): { snippet: string | null; description: string | null } {
@@ -115,22 +138,13 @@ function getFieldInfo(
   const typeStr = detail?.includes(':') ? detail.split(':').slice(1).join(':') : (detail ?? '');
   const baseTypeName = typeStr.replace(/[^a-zA-Z0-9_]/g, '');
 
-  // Search all object/interface types for a field named `label` to get its description.
-  // Prefer a hit where the field's return type matches the detail.
-  let description: string | null = null;
-  for (const type of Object.values(schema.getTypeMap())) {
-    if (!isObjectType(type) && !isInterfaceType(type)) continue;
-    const fields = type.getFields();
-    if (!(label in fields)) continue;
-    const field = fields[label];
-    if (!field.description) continue;
-    const fieldBase = getNamedType(field.type).name;
-    if (!baseTypeName || fieldBase === baseTypeName) {
-      description = field.description;
-      break;
-    }
-    if (!description) description = field.description;
-  }
+  // Prefer a field whose return type matches the completion detail, falling back to
+  // the first field with this name. The index preserves schema type traversal order.
+  const fieldInfos = fieldIndex.get(label) ?? [];
+  const matchingField = !baseTypeName
+    ? fieldInfos[0]
+    : fieldInfos.find((field) => field.returnTypeName === baseTypeName) ?? fieldInfos[0];
+  const description = matchingField?.description ?? null;
 
   // Build a selection-set snippet based on the return type.
   if (!baseTypeName) return { snippet: null, description };
@@ -174,7 +188,12 @@ function registerCompletionProvider(schema: GraphQLSchema): void {
         return {
           incomplete: true,
           suggestions: filtered.map((entry) => {
-            const { snippet, description } = getFieldInfo(schema, entry.label, entry.detail ?? undefined);
+            const { snippet, description } = getFieldInfo(
+              schema,
+              fieldInfoIndex,
+              entry.label,
+              entry.detail ?? undefined,
+            );
             const docString = description ?? resolveDocString(entry.documentation);
             return {
               label: docString
@@ -236,6 +255,7 @@ export async function refreshSchema(): Promise<void> {
     console.log('[hex] refreshSchema: introspection fetched, keys =', Object.keys(introspection));
 
     builtSchema = buildClientSchema(introspection);
+    fieldInfoIndex = buildFieldInfoIndex(builtSchema);
     console.log('[hex] refreshSchema: schema built, types =', Object.keys(builtSchema.getTypeMap()).length);
 
     // Update hover/diagnostics/formatting worker with the schema.
