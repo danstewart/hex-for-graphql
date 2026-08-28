@@ -5,7 +5,8 @@ import { registerAllThemes, MONACO_THEME_MAP } from '../lib/monacoTheme';
 import { FONT_SIZE_PRESETS } from '../lib/uiScale';
 import { useStore } from '../store';
 import { runOperation } from '../lib/actions';
-import { findOperationLine, findOperationAtLine, formatOperationAtLine, getOperationFoldLines, resolveDocTarget } from '../lib/graphql';
+import { findOperationLine, formatOperationAtLine, getOperationFoldLines, resolveDocTarget } from '../lib/graphql';
+import { resolveActiveOperationTransition, type ActiveOperationIdentity } from '../lib/operationIdentity';
 import { saveEditorContent, renameOperationVariables } from '../lib/db';
 import { setMonacoInstance, getBuiltSchema } from '../lib/schema';
 
@@ -39,7 +40,7 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
   const containerRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef(initialContent);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const activeOpRef = useRef<{ name: string | null; startLine: number | null }>({ name: null, startLine: null });
+  const activeOpRef = useRef<ActiveOperationIdentity | null>(null);
   const modKeyRef = useRef(false);
   const hoverDecorationsRef = useRef<string[]>([]);
 
@@ -272,27 +273,27 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       hoverDecorationsRef.current = editor.deltaDecorations(hoverDecorationsRef.current, []);
     });
 
-    // Update window title and variables pane when cursor moves to a different operation
+    // Update window title and variables pane when cursor moves to a different operation.
+    // Identity resolution is pure and uses AST structure/source offsets rather than line numbers.
     editor.onDidChangeCursorPosition(() => {
       const pos = editor.getPosition();
-      if (!pos) return;
-      const content = editor.getValue();
-      const opName = findOperationAtLine(content, pos.lineNumber);
+      const model = editor.getModel();
+      if (!pos || !model) return;
+      const transition = resolveActiveOperationTransition(
+        activeOpRef.current,
+        editor.getValue(),
+        model.getOffsetAt(pos),
+      );
+      const opName = transition.active?.name ?? null;
       document.title = opName ? `Hex — ${opName}` : 'Hex';
-      if (opName !== activeOpRef.current.name) {
-        const opInfo = opName ? formatOperationAtLine(content, pos.lineNumber) : null;
-        const newStartLine = opInfo?.startLine ?? null;
-        const store = useStore.getState();
-        if (opName && newStartLine !== null && newStartLine === activeOpRef.current.startLine) {
-          // Same position, name changed — rename, carry variables over
-          const oldName = activeOpRef.current.name;
-          store.renameCurrentOperation(opName);
-          if (oldName) void renameOperationVariables(oldName, opName);
-        } else {
-          store.setCurrentOperationName(opName);
-        }
-        activeOpRef.current = { name: opName, startLine: newStartLine };
+
+      if (transition.renamedFrom) {
+        useStore.getState().renameCurrentOperation(opName!);
+        void renameOperationVariables(transition.renamedFrom, opName!);
+      } else if (opName !== activeOpRef.current?.name) {
+        useStore.getState().setCurrentOperationName(opName);
       }
+      activeOpRef.current = transition.active;
     });
 
     if (initialContent) {
