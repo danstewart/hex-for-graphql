@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import {
   Play,
   Loader2,
   Check,
+  X,
   Search,
   Settings as SettingsIcon,
   PanelLeftClose,
@@ -39,6 +41,25 @@ export function Toolbar() {
   const sidebarCollapsed = useStore((s) => s.sidebarCollapsed);
   const setSidebarCollapsed = useStore((s) => s.setSidebarCollapsed);
   const fontSize = useStore((s) => s.fontSize);
+  const [showLoaded, setShowLoaded] = useState(false);
+  const [loadedVisible, setLoadedVisible] = useState(false);
+
+  useEffect(() => {
+    if (schemaStatus !== 'loaded') {
+      setShowLoaded(false);
+      setLoadedVisible(false);
+      return;
+    }
+
+    setShowLoaded(true);
+    setLoadedVisible(true);
+    const fadeTimer = window.setTimeout(() => setLoadedVisible(false), 4500);
+    const hideTimer = window.setTimeout(() => setShowLoaded(false), 5000);
+    return () => {
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(hideTimer);
+    };
+  }, [schemaStatus]);
 
   return (
     <div
@@ -91,12 +112,24 @@ export function Toolbar() {
           onClick={() => setErrorModal({ title: 'Schema Error', detail: schemaError ?? '' })}
           className={`flex items-center gap-1 text-xs font-medium ${SCHEMA_STATUS_CLASS.error} hover:text-danger-hover transition-colors`}
         >
+          <X size={12} />
           {SCHEMA_STATUS_LABEL.error}
         </button>
+      ) : schemaStatus === 'loading' ? (
+        <span className={`flex items-center gap-1 text-xs font-medium ${SCHEMA_STATUS_CLASS.loading}`}>
+          <Loader2 size={12} className="animate-spin" />
+          {SCHEMA_STATUS_LABEL.loading}
+        </span>
+      ) : schemaStatus === 'loaded' ? (
+        showLoaded && (
+          <span className={`flex items-center gap-1 text-xs font-medium transition-opacity duration-500 ${SCHEMA_STATUS_CLASS.loaded} ${loadedVisible ? 'opacity-100' : 'opacity-0'}`}>
+            <Check size={12} />
+            {SCHEMA_STATUS_LABEL.loaded}
+          </span>
+        )
       ) : (
-        <span className={`flex items-center gap-1 text-xs font-medium ${SCHEMA_STATUS_CLASS[schemaStatus]}`}>
-          {schemaStatus === 'loaded' && <Check size={12} />}
-          {SCHEMA_STATUS_LABEL[schemaStatus]}
+        <span className={`flex items-center gap-1 text-xs font-medium ${SCHEMA_STATUS_CLASS.none}`}>
+          {SCHEMA_STATUS_LABEL.none}
         </span>
       )}
 

@@ -92,9 +92,13 @@ export function SettingsModal() {
     setInstalledFonts(detectInstalledFonts(FONT_CANDIDATES));
   }, [settingsOpen, storeEndpoint, storeHeaders, storeCookies, storeEditorFont, storeFontSize]);
 
+  const cleanHeaders = headers.filter(([k]) => k.trim() !== '');
+  const cleanCookies = cookies.filter(([name]) => name.trim() !== '');
+  const schemaSettingsChanged = endpoint !== storeEndpoint
+    || JSON.stringify(cleanHeaders) !== JSON.stringify(storeHeaders)
+    || JSON.stringify(cleanCookies) !== JSON.stringify(storeCookies);
+
   async function handleSave() {
-    const cleanHeaders = headers.filter(([k]) => k.trim() !== '');
-    const cleanCookies = cookies.filter(([name]) => name.trim() !== '');
     const fontValue = editorFont.trim() || 'Geist Mono, monospace';
     setEndpoint(endpoint);
     setHeaders(cleanHeaders);
@@ -107,7 +111,7 @@ export function SettingsModal() {
       useStore.getState().addToast(`Settings saved in memory but failed to persist: ${String(err)}`);
     }
     setSettingsOpen(false);
-    void refreshSchema();
+    if (schemaSettingsChanged) void refreshSchema();
   }
 
   function addHeader() {
@@ -353,7 +357,7 @@ export function SettingsModal() {
             onClick={handleSave}
             className="px-4 py-2 rounded-md text-sm text-accent-foreground bg-accent hover:bg-accent-hover font-medium transition-colors"
           >
-            Save &amp; Refresh Schema
+            {schemaSettingsChanged ? 'Save & Refresh Schema' : 'Save'}
           </button>
         </div>
       </div>

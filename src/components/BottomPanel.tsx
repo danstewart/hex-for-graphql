@@ -93,7 +93,7 @@ export function BottomPanel() {
       >
         <span className="min-w-0 flex-1 truncate text-[10px] font-semibold tracking-widest uppercase text-slate-500">
           {currentOperationName
-            ? <>Variables for <span className="text-slate-600">{currentOperationName}</span></>
+            ? <>Variables for <span className="font-mono normal-case tracking-normal text-slate-600">{currentOperationName}</span></>
             : 'Variables'}
         </span>
         <button
