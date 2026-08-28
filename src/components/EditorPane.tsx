@@ -195,10 +195,6 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
   const handleMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
 
-    const model = editor.getModel();
-    console.log('[hex] EditorPane mounted, model URI:', model?.uri.toString(), 'language:', model?.getLanguageId());
-    console.log('[hex] monaco.languages.graphql:', (monaco.languages as unknown as Record<string, unknown>)['graphql']);
-
     // Give the schema module access to the Monaco instance so it can register
     // the in-process completion provider.
     setMonacoInstance(monaco);

@@ -74,7 +74,7 @@ export function Sidebar({ onNavigate }: Props) {
     >
       {!hasAny && (
         <p className="p-4 text-slate-600 text-xs leading-relaxed">
-          Named operations appear here after you run them.
+          Run a named operation to save it here.
         </p>
       )}
 

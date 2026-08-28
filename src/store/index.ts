@@ -3,6 +3,8 @@ import type { DocTarget } from '../lib/graphql';
 import type { FontSizePreset } from '../lib/uiScale';
 import type { ThemeId } from '../lib/themes';
 
+let nextToastId = 0;
+
 export interface Operation {
   id: number;
   name: string;
@@ -129,7 +131,7 @@ export const useStore = create<AppState>((set) => ({
   schemaError: null,
   toasts: [],
   addToast: (message) => set((s) => ({
-    toasts: [...s.toasts, { id: Date.now(), message }],
+    toasts: [...s.toasts, { id: ++nextToastId, message }],
   })),
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
   settingsOpen: false,
