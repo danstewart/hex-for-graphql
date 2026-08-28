@@ -190,7 +190,9 @@ export function findOperationAtLine(
       const end = d.loc.endToken.line;
       if (line >= start && line <= end) return d.name.value;
     }
-  } catch {}
+  } catch {
+    // A malformed document has no reliably resolvable operation at this line.
+  }
   return null;
 }
 
@@ -210,7 +212,9 @@ export function formatOperationAtLine(
         return { startLine: start, endLine: end, formatted: print(d) };
       }
     }
-  } catch {}
+  } catch {
+    // A malformed document has no reliably formattable operation at this line.
+  }
   return null;
 }
 

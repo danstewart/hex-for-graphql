@@ -106,35 +106,39 @@ function resolveDocString(doc: string | null | undefined): string | null {
   return doc || null;
 }
 
-function toMonacoCompletionKind(kind: GraphQLCompletionItemKind): Monaco.languages.CompletionItemKind {
+function toMonacoCompletionKind(
+  instance: typeof Monaco,
+  kind: GraphQLCompletionItemKind | undefined,
+): Monaco.languages.CompletionItemKind {
+  const completionKinds = instance.languages.CompletionItemKind;
   const kindMap: Record<GraphQLCompletionItemKind, Monaco.languages.CompletionItemKind> = {
-    1: Monaco.languages.CompletionItemKind.Text,
-    2: Monaco.languages.CompletionItemKind.Method,
-    3: Monaco.languages.CompletionItemKind.Function,
-    4: Monaco.languages.CompletionItemKind.Constructor,
-    5: Monaco.languages.CompletionItemKind.Field,
-    6: Monaco.languages.CompletionItemKind.Variable,
-    7: Monaco.languages.CompletionItemKind.Class,
-    8: Monaco.languages.CompletionItemKind.Interface,
-    9: Monaco.languages.CompletionItemKind.Module,
-    10: Monaco.languages.CompletionItemKind.Property,
-    11: Monaco.languages.CompletionItemKind.Unit,
-    12: Monaco.languages.CompletionItemKind.Value,
-    13: Monaco.languages.CompletionItemKind.Enum,
-    14: Monaco.languages.CompletionItemKind.Keyword,
-    15: Monaco.languages.CompletionItemKind.Snippet,
-    16: Monaco.languages.CompletionItemKind.Color,
-    17: Monaco.languages.CompletionItemKind.File,
-    18: Monaco.languages.CompletionItemKind.Reference,
-    19: Monaco.languages.CompletionItemKind.Folder,
-    20: Monaco.languages.CompletionItemKind.EnumMember,
-    21: Monaco.languages.CompletionItemKind.Constant,
-    22: Monaco.languages.CompletionItemKind.Struct,
-    23: Monaco.languages.CompletionItemKind.Event,
-    24: Monaco.languages.CompletionItemKind.Operator,
-    25: Monaco.languages.CompletionItemKind.TypeParameter,
+    1: completionKinds.Text,
+    2: completionKinds.Method,
+    3: completionKinds.Function,
+    4: completionKinds.Constructor,
+    5: completionKinds.Field,
+    6: completionKinds.Variable,
+    7: completionKinds.Class,
+    8: completionKinds.Interface,
+    9: completionKinds.Module,
+    10: completionKinds.Property,
+    11: completionKinds.Unit,
+    12: completionKinds.Value,
+    13: completionKinds.Enum,
+    14: completionKinds.Keyword,
+    15: completionKinds.Snippet,
+    16: completionKinds.Color,
+    17: completionKinds.File,
+    18: completionKinds.Reference,
+    19: completionKinds.Folder,
+    20: completionKinds.EnumMember,
+    21: completionKinds.Constant,
+    22: completionKinds.Struct,
+    23: completionKinds.Event,
+    24: completionKinds.Operator,
+    25: completionKinds.TypeParameter,
   };
-  return kindMap[kind];
+  return kind === undefined ? completionKinds.Text : kindMap[kind];
 }
 
 function buildFieldInfoIndex(schema: GraphQLSchema): Map<string, IndexedFieldInfo[]> {
@@ -225,7 +229,7 @@ function registerCompletionProvider(schema: GraphQLSchema): void {
               label: docString
                 ? { label: entry.label, description: docString.split('\n')[0].slice(0, 120) }
                 : entry.label,
-              kind: toMonacoCompletionKind(entry.kind),
+              kind: toMonacoCompletionKind(m, entry.kind),
               detail: entry.detail ?? '',
               documentation: docString ? { value: docString } : undefined,
               insertText: snippet ?? entry.insertText ?? entry.label,

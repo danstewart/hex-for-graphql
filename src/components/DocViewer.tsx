@@ -29,7 +29,7 @@ function ToggleIcon({ open }: { open: boolean | null }) {
 }
 
 function TypeRef({ t, onNavigate }: { t: string; onNavigate?: (name: string) => void }) {
-  const baseName = t.replace(/[\[\]!]/g, '');
+  const baseName = t.replace(/[[\]!]/g, '');
   return (
     <span
       className={`text-syntax-type font-mono text-[11px] ${onNavigate ? 'cursor-pointer hover:text-syntax-type-hover hover:underline' : ''}`}
@@ -142,7 +142,8 @@ export function DocViewer() {
   function toggle(key: string) {
     setExpanded(prev => {
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   }
