@@ -9,6 +9,7 @@ import { findOperationLine, formatOperationAtLine, getOperationFoldLines, resolv
 import { resolveActiveOperationTransition, type ActiveOperationIdentity } from '../lib/operationIdentity';
 import { saveEditorContent, renameOperationVariables } from '../lib/db';
 import { setMonacoInstance, getBuiltSchema } from '../lib/schema';
+import { registerCommandPaletteShortcuts } from '../lib/keyboardShortcuts';
 
 interface Props {
   initialContent: string;
@@ -207,13 +208,8 @@ export function EditorPane({ initialContent, navigateTo, onNavigateHandled }: Pr
       editor.trigger('keyboard', 'editor.action.triggerSuggest', {});
     });
 
-    // ⌘P opens operation/schema navigation; ⌘⇧P opens executable commands.
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyP, () => {
-      useStore.getState().openCommandPalette('navigate');
-    });
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyP, () => {
-      useStore.getState().openCommandPalette('commands');
-    });
+    // Register with Monaco so it owns these keys while the editor is focused.
+    registerCommandPaletteShortcuts(editor, monaco, useStore.getState().openCommandPalette);
 
     // ⌘↵ runs the operation at the cursor.
     // addCommand takes exclusive ownership of the keybinding, preventing Monaco's

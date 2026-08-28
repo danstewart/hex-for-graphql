@@ -8,6 +8,7 @@ import { saveOperationVariables } from '../lib/db';
 import { getOperationVariablesSchema } from '../lib/graphql';
 import { getBuiltSchema } from '../lib/schema';
 import { FONT_SIZE_PRESETS } from '../lib/uiScale';
+import { registerCommandPaletteShortcuts } from '../lib/keyboardShortcuts';
 
 const VARIABLES_SCHEMA_URI = 'hex://variables-schema.json';
 
@@ -59,12 +60,7 @@ export function BottomPanel() {
   const handleMount: OnMount = (editor, monaco) => {
     monacoRef.current = monaco;
     applyVariablesSchema(monaco);
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyP, () => {
-      useStore.getState().openCommandPalette('navigate');
-    });
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyP, () => {
-      useStore.getState().openCommandPalette('commands');
-    });
+    registerCommandPaletteShortcuts(editor, monaco, useStore.getState().openCommandPalette);
   };
 
   // Recompute the variables schema whenever the operation's declared variables could have

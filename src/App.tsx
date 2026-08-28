@@ -1,7 +1,7 @@
 import { Component, useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from './store';
-import { loadSettings, loadOperations, loadEditorContent, loadAllOperationVariables, loadLayout, saveLayout } from './lib/db';
+import { DEFAULT_LAYOUT, loadSettings, loadOperations, loadEditorContent, loadAllOperationVariables, loadLayout, saveLayout } from './lib/db';
 import { refreshSchema } from './lib/schema';
 import { Toolbar } from './components/Toolbar';
 import { Sidebar } from './components/Sidebar';
@@ -15,6 +15,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { ErrorModal } from './components/ErrorModal';
 import { Toaster } from './components/Toaster';
 import { normalizeThemeId } from './lib/themes';
+import { getCommandPaletteMode } from './lib/keyboardShortcuts';
 
 class ErrorBoundary extends Component<
   { children: ReactNode },
@@ -75,9 +76,9 @@ function AppInner() {
   const [navigateTo, setNavigateTo] = useState<string | null>(null);
 
   // Pane sizes (px) — hydrated from the DB once boot() resolves; see layoutLoadedRef below.
-  const [sidebarWidth, setSidebarWidth] = useState(192);
-  const [bottomHeight, setBottomHeight] = useState(180);
-  const [docWidth, setDocWidth] = useState(300);
+  const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_LAYOUT.sidebarWidth);
+  const [bottomHeight, setBottomHeight] = useState(DEFAULT_LAYOUT.bottomHeight);
+  const [docWidth, setDocWidth] = useState(DEFAULT_LAYOUT.docWidth);
   // Guards the layout-persistence effect from firing (and clobbering saved values)
   // before the DB-loaded layout has actually been applied to state.
   const layoutLoadedRef = useRef(false);
@@ -86,7 +87,7 @@ function AppInner() {
   // when the container resizes (e.g. docs panel opens/closes).
   const centerRef = useRef<HTMLDivElement>(null);
   const [centerWidth, setCenterWidth] = useState(0);
-  const [responseFraction, setResponseFraction] = useState(0.45);
+  const [responseFraction, setResponseFraction] = useState(DEFAULT_LAYOUT.responseFraction);
   // A hardcoded response max (e.g. 800) put an effective floor under the editor's width
   // equal to centerWidth - 800 — on a typical window that's a few hundred px the editor
   // could never shrink past. Derive the cap from centerWidth instead so the editor can
@@ -138,12 +139,11 @@ function AppInner() {
       };
 
       const defaultSettings = { endpoint: '', headers: [] as [string,string][], cookies: [] as [string,string][], editorFont: 'Geist Mono, monospace', fontSize: 'medium' as const, theme: 'noir' };
-      const defaultLayout = { sidebarWidth: 192, bottomHeight: 180, docWidth: 300, responseFraction: 0.45, docOpen: false, sidebarCollapsed: false, variablesCollapsed: false };
       const settings = check(settingsResult, 'settings', defaultSettings);
       const ops      = check(opsResult,      'operations', []);
       const content  = check(contentResult,  'editor content', '');
       const opVars   = check(opVarsResult,   'variables', {});
-      const layout   = check(layoutResult,   'layout', defaultLayout);
+      const layout   = check(layoutResult,   'layout', DEFAULT_LAYOUT);
 
       setEndpoint(settings.endpoint);
       setHeaders(settings.headers);
@@ -192,9 +192,11 @@ function AppInner() {
       if ((e.metaKey || e.ctrlKey) && e.key === ',') {
         e.preventDefault();
         setSettingsOpen(true);
-      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
+      } else {
+        const mode = getCommandPaletteMode(e);
+        if (!mode) return;
         e.preventDefault();
-        openCommandPalette(e.shiftKey ? 'commands' : 'navigate');
+        openCommandPalette(mode);
       }
     }
     window.addEventListener('keydown', onKeyDown);

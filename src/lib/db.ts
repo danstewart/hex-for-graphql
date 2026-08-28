@@ -202,6 +202,7 @@ export async function saveSettings(
   cookies: [string, string][],
   editorFont: string,
   fontSize: FontSizePreset,
+  theme: ThemeId,
 ): Promise<void> {
   const conn = await getDb();
   const pairs: [string, string][] = [
@@ -210,6 +211,7 @@ export async function saveSettings(
     ['cookies', JSON.stringify(cookies)],
     ['editor_font', editorFont],
     ['font_size', fontSize],
+    ['theme', theme],
   ];
   for (const [key, value] of pairs) {
     await conn.execute(
@@ -278,14 +280,6 @@ export async function saveOperationVariables(name: string, variables: string): P
   );
 }
 
-export async function saveTheme(theme: ThemeId): Promise<void> {
-  const conn = await getDb();
-  await conn.execute(
-    `INSERT OR REPLACE INTO settings (key, value) VALUES ('theme', ?)`,
-    [theme],
-  );
-}
-
 export interface LayoutState {
   sidebarWidth: number;
   bottomHeight: number;
@@ -296,7 +290,7 @@ export interface LayoutState {
   variablesCollapsed: boolean;
 }
 
-const DEFAULT_LAYOUT: LayoutState = {
+export const DEFAULT_LAYOUT: LayoutState = {
   sidebarWidth: 192,
   bottomHeight: 180,
   docWidth: 300,

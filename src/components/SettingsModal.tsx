@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
 import { useStore } from '../store';
-import { saveSettings, saveTheme } from '../lib/db';
+import { saveSettings } from '../lib/db';
 import { refreshSchema } from '../lib/schema';
 import { FONT_SIZE_PRESETS, type FontSizePreset } from '../lib/uiScale';
 import { APP_THEMES, type ThemeId } from '../lib/themes';
@@ -102,7 +102,7 @@ export function SettingsModal() {
     setEditorFont(fontValue);
     setFontSize(fontSize);
     try {
-      await saveSettings(endpoint, cleanHeaders, cleanCookies, fontValue, fontSize);
+      await saveSettings(endpoint, cleanHeaders, cleanCookies, fontValue, fontSize, theme);
     } catch (err) {
       useStore.getState().addToast(`Settings saved in memory but failed to persist: ${String(err)}`);
     }
@@ -146,13 +146,8 @@ export function SettingsModal() {
     setLocalEditorFont(`${name}, monospace`);
   }
 
-  async function handleThemeChange(id: ThemeId) {
+  function handleThemeChange(id: ThemeId) {
     setTheme(id);
-    try {
-      await saveTheme(id);
-    } catch (err) {
-      useStore.getState().addToast(`Theme saved in memory but failed to persist: ${String(err)}`);
-    }
   }
 
   if (!settingsOpen) return null;
