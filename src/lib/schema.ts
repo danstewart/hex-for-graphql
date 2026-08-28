@@ -4,7 +4,7 @@ import { buildClientSchema, parse, Kind, getNamedType, isObjectType, isInterface
 import type { IntrospectionQuery, GraphQLSchema, SelectionSetNode, ASTNode } from 'graphql';
 import { getAutocompleteSuggestions, Position as GQLPosition } from 'graphql-language-service';
 import type * as Monaco from 'monaco-editor';
-import { fetchIntrospection } from './graphql';
+import { fetchIntrospection, getGraphQLErrorDetails } from './graphql';
 import { useStore } from '../store';
 
 type GraphQLMode = ReturnType<typeof initializeMode>;
@@ -235,10 +235,6 @@ export function applyIntrospection(
   console.log('[hex] applyIntrospection: schema config set, schemas:', mode.schemas);
 }
 
-function tryPrettyJson(s: string): string {
-  try { return JSON.stringify(JSON.parse(s), null, 2); } catch { return s; }
-}
-
 export async function refreshSchema(): Promise<void> {
   const { endpoint, headers, cookies, setSchemaStatus } = useStore.getState();
   console.log('[hex] refreshSchema: endpoint =', endpoint);
@@ -267,12 +263,7 @@ export async function refreshSchema(): Promise<void> {
     console.log('[hex] refreshSchema: schema applied');
   } catch (err) {
     console.error('[hex] refreshSchema: FAILED', err);
-    const errStr = String(err);
-    const MARKER = '\n\nRESPONSE_BODY\n';
-    const markerIdx = errStr.indexOf(MARKER);
-    const detail = markerIdx >= 0 ? errStr.slice(0, markerIdx) : errStr;
-    const rawBody = markerIdx >= 0 ? errStr.slice(markerIdx + MARKER.length) : undefined;
-    const responseBody = rawBody !== undefined ? tryPrettyJson(rawBody) : undefined;
+    const { detail, responseBody } = getGraphQLErrorDetails(err);
     setSchemaStatus('error', detail);
     useStore.getState().setErrorModal({ title: 'Schema Error', detail, responseBody });
   }
