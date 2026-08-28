@@ -1,0 +1,51 @@
+name: Pull Request Quality
+
+on:
+  pull_request:
+  workflow_call:
+
+jobs:
+  quality:
+    name: Quality checks
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Lint frontend
+        run: npm run lint
+
+      - name: Check frontend formatting
+        run: npm run format:check
+
+      - name: Test frontend
+        run: npm test
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Check Rust formatting
+        run: cargo fmt --check
+        working-directory: src-tauri
+
+      - name: Check Rust
+        run: cargo check --locked
+        working-directory: src-tauri
+
+      - name: Test Rust
+        run: cargo test --locked
+        working-directory: src-tauri

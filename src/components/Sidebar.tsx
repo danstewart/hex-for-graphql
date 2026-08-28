@@ -60,7 +60,8 @@ export function Sidebar({ onNavigate }: Props) {
   function toggleEntity(key: string) {
     setCollapsed((prev) => {
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   }
@@ -74,7 +75,7 @@ export function Sidebar({ onNavigate }: Props) {
     >
       {!hasAny && (
         <p className="p-4 text-slate-600 text-xs leading-relaxed">
-          Named operations appear here after you run them.
+          Run a named operation to save it here.
         </p>
       )}
 

@@ -72,37 +72,67 @@ const DEFAULT_TEST_OPERATIONS: Pick<Operation, 'name' | 'type' | 'body'>[] = [
   },
 ];
 
+interface Migration {
+  version: number;
+  run: (conn: Database) => Promise<void>;
+}
+
+// SQLite's user_version persists with the database without adding an application table.
+// Add future schema changes with the next version; never modify a migration already released.
+const MIGRATIONS: Migration[] = [
+  {
+    version: 1,
+    run: async (conn) => {
+      await conn.execute(`
+        CREATE TABLE IF NOT EXISTS settings (
+          key   TEXT PRIMARY KEY,
+          value TEXT NOT NULL
+        )
+      `);
+      await conn.execute(`
+        CREATE TABLE IF NOT EXISTS operations (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          name        TEXT    NOT NULL UNIQUE,
+          type        TEXT    NOT NULL,
+          body        TEXT    NOT NULL,
+          last_run_at TEXT
+        )
+      `);
+      await conn.execute(`
+        CREATE TABLE IF NOT EXISTS editor_state (
+          id      INTEGER PRIMARY KEY CHECK (id = 1),
+          content TEXT    NOT NULL DEFAULT ''
+        )
+      `);
+      await conn.execute(
+        `INSERT OR IGNORE INTO editor_state (id, content) VALUES (1, '')`,
+      );
+      await conn.execute(`
+        CREATE TABLE IF NOT EXISTS operation_variables (
+          name      TEXT PRIMARY KEY,
+          variables TEXT NOT NULL DEFAULT '{}'
+        )
+      `);
+    },
+  },
+];
+
 async function migrate(conn: Database): Promise<void> {
-  await conn.execute(`
-    CREATE TABLE IF NOT EXISTS settings (
-      key   TEXT PRIMARY KEY,
-      value TEXT NOT NULL
-    )
-  `);
-  await conn.execute(`
-    CREATE TABLE IF NOT EXISTS operations (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      name        TEXT    NOT NULL UNIQUE,
-      type        TEXT    NOT NULL,
-      body        TEXT    NOT NULL,
-      last_run_at TEXT
-    )
-  `);
-  await conn.execute(`
-    CREATE TABLE IF NOT EXISTS editor_state (
-      id      INTEGER PRIMARY KEY CHECK (id = 1),
-      content TEXT    NOT NULL DEFAULT ''
-    )
-  `);
-  await conn.execute(
-    `INSERT OR IGNORE INTO editor_state (id, content) VALUES (1, '')`,
-  );
-  await conn.execute(`
-    CREATE TABLE IF NOT EXISTS operation_variables (
-      name      TEXT PRIMARY KEY,
-      variables TEXT NOT NULL DEFAULT '{}'
-    )
-  `);
+  const [row] = await conn.select<{ user_version: number }[]>('PRAGMA user_version');
+  const currentVersion = row?.user_version ?? 0;
+  const latestVersion = MIGRATIONS[MIGRATIONS.length - 1]?.version ?? 0;
+
+  if (currentVersion > latestVersion) {
+    throw new Error(
+      `Database schema version ${currentVersion} is newer than supported version ${latestVersion}`,
+    );
+  }
+
+  for (const migration of MIGRATIONS) {
+    if (migration.version <= currentVersion) continue;
+    await migration.run(conn);
+    await conn.execute(`PRAGMA user_version = ${migration.version}`);
+  }
 }
 
 async function seedDefaultTestData(conn: Database): Promise<void> {
@@ -172,14 +202,18 @@ export async function loadSettings(): Promise<{
     'SELECT key, value FROM settings',
   );
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
-  let headers: [string, string][] = [];
-  let cookies: [string, string][] = [];
-  try {
-    headers = JSON.parse(map['headers'] ?? '[]');
-  } catch {}
-  try {
-    cookies = JSON.parse(map['cookies'] ?? '[]');
-  } catch {}
+  const parseJsonSetting = <T>(key: string, fallback: T): T => {
+    const value = map[key];
+    if (value === undefined) return fallback;
+    try {
+      return JSON.parse(value) as T;
+    } catch (error) {
+      console.warn(`Invalid JSON in database setting "${key}"; using fallback.`, error);
+      return fallback;
+    }
+  };
+  const headers = parseJsonSetting<[string, string][]>('headers', []);
+  const cookies = parseJsonSetting<[string, string][]>('cookies', []);
   // `font_size` supersedes the legacy numeric `editor_font_size` px setting;
   // fall back to mapping the old value so existing installs keep a sensible size.
   const rawFontSize = map['font_size'];
@@ -202,6 +236,7 @@ export async function saveSettings(
   cookies: [string, string][],
   editorFont: string,
   fontSize: FontSizePreset,
+  theme: ThemeId,
 ): Promise<void> {
   const conn = await getDb();
   const pairs: [string, string][] = [
@@ -210,13 +245,9 @@ export async function saveSettings(
     ['cookies', JSON.stringify(cookies)],
     ['editor_font', editorFont],
     ['font_size', fontSize],
+    ['theme', theme],
   ];
-  for (const [key, value] of pairs) {
-    await conn.execute(
-      `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
-      [key, value],
-    );
-  }
+  await saveSettingPairs(conn, pairs);
 }
 
 export async function loadOperations(): Promise<Operation[]> {
@@ -278,14 +309,6 @@ export async function saveOperationVariables(name: string, variables: string): P
   );
 }
 
-export async function saveTheme(theme: ThemeId): Promise<void> {
-  const conn = await getDb();
-  await conn.execute(
-    `INSERT OR REPLACE INTO settings (key, value) VALUES ('theme', ?)`,
-    [theme],
-  );
-}
-
 export interface LayoutState {
   sidebarWidth: number;
   bottomHeight: number;
@@ -296,7 +319,7 @@ export interface LayoutState {
   variablesCollapsed: boolean;
 }
 
-const DEFAULT_LAYOUT: LayoutState = {
+export const DEFAULT_LAYOUT: LayoutState = {
   sidebarWidth: 192,
   bottomHeight: 180,
   docWidth: 300,
@@ -327,6 +350,17 @@ export async function loadLayout(): Promise<LayoutState> {
   };
 }
 
+async function saveSettingPairs(conn: Database, pairs: [string, string][]): Promise<void> {
+  // The plugin exposes execute/select but no transaction object. One multi-row SQLite
+  // statement gives these related settings the required all-or-nothing behavior.
+  const placeholders = pairs.map(() => '(?, ?)').join(', ');
+  await conn.execute(
+    `INSERT INTO settings (key, value) VALUES ${placeholders}
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    pairs.flat(),
+  );
+}
+
 export async function saveLayout(layout: LayoutState): Promise<void> {
   const conn = await getDb();
   const pairs: [string, string][] = [
@@ -338,20 +372,15 @@ export async function saveLayout(layout: LayoutState): Promise<void> {
     ['layout_sidebar_collapsed', layout.sidebarCollapsed ? '1' : '0'],
     ['layout_variables_collapsed', layout.variablesCollapsed ? '1' : '0'],
   ];
-  for (const [key, value] of pairs) {
-    await conn.execute(
-      `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
-      [key, value],
-    );
-  }
+  await saveSettingPairs(conn, pairs);
 }
 
 export async function renameOperationVariables(oldName: string, newName: string): Promise<void> {
   const conn = await getDb();
+  // A single statement is atomic and OR REPLACE preserves the previous behavior when
+  // variables already exist under the new operation name.
   await conn.execute(
-    `INSERT OR REPLACE INTO operation_variables (name, variables)
-     SELECT ?, variables FROM operation_variables WHERE name = ?`,
+    'UPDATE OR REPLACE operation_variables SET name = ? WHERE name = ?',
     [newName, oldName],
   );
-  await conn.execute('DELETE FROM operation_variables WHERE name = ?', [oldName]);
 }

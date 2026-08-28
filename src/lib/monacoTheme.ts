@@ -217,7 +217,11 @@ function syntaxRules(theme: MonacoThemeConfig) {
   ];
 }
 
+let registeredMonaco: Monaco | null = null;
+
 export function registerAllThemes(monaco: Monaco) {
+  if (registeredMonaco === monaco) return;
+
   Object.values(THEME_CONFIGS).forEach((theme) => {
     const scrollbarBase = theme.scrollbar === 'dark' ? '#000000' : '#ffffff';
 
@@ -261,4 +265,5 @@ export function registerAllThemes(monaco: Monaco) {
       },
     });
   });
+  registeredMonaco = monaco;
 }

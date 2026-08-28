@@ -1,5 +1,5 @@
 import { useStore } from '../store';
-import { executeGraphQL, parseDocumentOperations, findOperationAtLine } from './graphql';
+import { executeGraphQL, getGraphQLErrorDetails, parseDocumentOperations, findOperationAtLine } from './graphql';
 import { upsertOperation, loadOperations } from './db';
 
 export async function runOperation(
@@ -11,13 +11,15 @@ export async function runOperation(
     headers,
     cookies,
     variablesContent,
-    setResponse,
-    setIsExecuting,
     setOperations,
+    startExecution,
+    completeExecution,
   } = useStore.getState();
+  const executionId = startExecution();
 
   if (!endpoint) {
-    setResponse(
+    completeExecution(
+      executionId,
       JSON.stringify(
         { error: 'No endpoint configured — open Settings (⌘,) to set one.' },
         null,
@@ -28,25 +30,32 @@ export async function runOperation(
   }
 
   if (!editorContent.trim()) {
-    setResponse(
+    completeExecution(
+      executionId,
       JSON.stringify({ error: 'Editor is empty — write a GraphQL operation first.' }, null, 2),
     );
     return;
   }
 
-  const operationName = findOperationAtLine(editorContent, cursorLine);
-  const ops = parseDocumentOperations(editorContent);
-  const currentOp = operationName ? ops.find((o) => o.name === operationName) : undefined;
+  let operationName: string | null;
+  let currentOp;
+  try {
+    operationName = findOperationAtLine(editorContent, cursorLine);
+    const ops = parseDocumentOperations(editorContent);
+    currentOp = operationName ? ops.find((o) => o.name === operationName) : undefined;
+  } catch (err) {
+    completeExecution(executionId, JSON.stringify({ error: String(err) }, null, 2));
+    return;
+  }
   const queryToSend = currentOp?.body ?? editorContent;
 
-  let variables: unknown = {};
+  let variables: unknown = null;
   try {
     variables = JSON.parse(variablesContent || '{}');
   } catch {
-    useStore.getState().addToast('Variables contain invalid JSON — sending request with no variables.');
+    useStore.getState().addToast('Variables contain invalid JSON — sending request without variables.');
   }
 
-  setIsExecuting(true);
   try {
     const headersMap = Object.fromEntries(headers);
     const cookiesMap = Object.fromEntries(cookies);
@@ -58,18 +67,23 @@ export async function runOperation(
       variables,
       operationName,
     );
-    setResponse(JSON.stringify(result, null, 2));
+    completeExecution(executionId, JSON.stringify(result, null, 2));
   } catch (err) {
-    setResponse(JSON.stringify({ error: String(err) }, null, 2));
-  } finally {
-    setIsExecuting(false);
+    const { detail, responseBody } = getGraphQLErrorDetails(err);
+    completeExecution(
+      executionId,
+      responseBody ?? JSON.stringify({ error: detail }, null, 2),
+    );
   }
 
-  // Persist only the operation that was actually run.
-  if (currentOp) {
+  // Persist only the operation that was actually run and is still current.
+  if (currentOp && useStore.getState().executionId === executionId) {
     try {
       await upsertOperation(currentOp);
-      setOperations(await loadOperations());
+      const operations = await loadOperations();
+      if (useStore.getState().executionId === executionId) {
+        setOperations(operations);
+      }
     } catch (err) {
       useStore.getState().addToast(`Failed to save operation "${currentOp.name}": ${String(err)}`);
     }

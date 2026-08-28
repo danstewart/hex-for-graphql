@@ -3,6 +3,8 @@ import type { DocTarget } from '../lib/graphql';
 import type { FontSizePreset } from '../lib/uiScale';
 import type { ThemeId } from '../lib/themes';
 
+let nextToastId = 0;
+
 export interface Operation {
   id: number;
   name: string;
@@ -32,6 +34,7 @@ interface AppState {
   variablesCollapsed: boolean;
   response: string | null;
   isExecuting: boolean;
+  executionId: number;
 
   // Signals (incrementing counter pattern — avoids re-render storms from boolean flips)
   executeRequested: number;
@@ -81,6 +84,9 @@ interface AppState {
   setOperationVariables: (v: Record<string, string>) => void;
   setResponse: (v: string | null) => void;
   setIsExecuting: (v: boolean) => void;
+  startExecution: () => number;
+  completeExecution: (executionId: number, response: string) => void;
+
   requestExecute: () => void;
   requestFormat: () => void;
   requestFormatAll: () => void;
@@ -111,6 +117,8 @@ export const useStore = create<AppState>((set) => ({
   variablesCollapsed: false,
   response: null,
   isExecuting: false,
+  executionId: 0,
+
   executeRequested: 0,
   formatRequested: 0,
   formatAllRequested: 0,
@@ -123,7 +131,7 @@ export const useStore = create<AppState>((set) => ({
   schemaError: null,
   toasts: [],
   addToast: (message) => set((s) => ({
-    toasts: [...s.toasts, { id: Date.now(), message }],
+    toasts: [...s.toasts, { id: ++nextToastId, message }],
   })),
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
   settingsOpen: false,
@@ -163,6 +171,17 @@ export const useStore = create<AppState>((set) => ({
   }),
   setResponse: (response) => set({ response }),
   setIsExecuting: (isExecuting) => set({ isExecuting }),
+  startExecution: () => {
+    let executionId = 0;
+    set((s) => {
+      executionId = s.executionId + 1;
+      return { executionId, isExecuting: true };
+    });
+    return executionId;
+  },
+  completeExecution: (executionId, response) => set((s) => (
+    s.executionId === executionId ? { response, isExecuting: false } : {}
+  )),
   requestExecute: () => set((s) => ({ executeRequested: s.executeRequested + 1 })),
   requestFormat: () => set((s) => ({ formatRequested: s.formatRequested + 1 })),
   requestFormatAll: () => set((s) => ({ formatAllRequested: s.formatAllRequested + 1 })),

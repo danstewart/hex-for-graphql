@@ -3,8 +3,9 @@ import type { MonacoGraphQLInitializeConfig } from 'monaco-graphql';
 import { buildClientSchema, parse, Kind, getNamedType, isObjectType, isInterfaceType } from 'graphql';
 import type { IntrospectionQuery, GraphQLSchema, SelectionSetNode, ASTNode } from 'graphql';
 import { getAutocompleteSuggestions, Position as GQLPosition } from 'graphql-language-service';
+import type { CompletionItemKind as GraphQLCompletionItemKind } from 'graphql-language-service';
 import type * as Monaco from 'monaco-editor';
-import { fetchIntrospection } from './graphql';
+import { fetchIntrospection, getGraphQLErrorDetails } from './graphql';
 import { useStore } from '../store';
 
 type GraphQLMode = ReturnType<typeof initializeMode>;
@@ -12,6 +13,14 @@ type GraphQLMode = ReturnType<typeof initializeMode>;
 let mode: GraphQLMode | null = null;
 // Built schema stored in the main thread for in-process completions.
 let builtSchema: GraphQLSchema | null = null;
+
+type IndexedFieldInfo = {
+  description: string;
+  returnTypeName: string;
+};
+
+// Built alongside the schema so completions do not scan every schema type per suggestion.
+let fieldInfoIndex = new Map<string, IndexedFieldInfo[]>();
 
 export function getBuiltSchema(): GraphQLSchema | null {
   return builtSchema;
@@ -23,12 +32,10 @@ let completionDisposable: Monaco.IDisposable | null = null;
 
 export function initGraphQLMode(): GraphQLMode {
   if (!mode) {
-    console.log('[hex] initGraphQLMode: initializing monaco-graphql mode');
     // Disable worker-based completions; we use our own in-process provider instead
     // to avoid worker serialization/deserialization issues.
     const config: MonacoGraphQLInitializeConfig = { modeConfiguration: { completionItems: false } };
     mode = initializeMode(config);
-    console.log('[hex] initGraphQLMode: mode initialized', mode);
   }
   return mode;
 }
@@ -95,19 +102,64 @@ function usedFieldsAtCursor(document: string, line: number, column: number): Set
   }
 }
 
-function resolveDocString(doc: unknown): string | null {
-  if (!doc) return null;
-  if (typeof doc === 'string') return doc || null;
-  if (typeof doc === 'object' && 'value' in (doc as object)) {
-    return (doc as { value: string }).value || null;
+function resolveDocString(doc: string | null | undefined): string | null {
+  return doc || null;
+}
+
+function toMonacoCompletionKind(
+  instance: typeof Monaco,
+  kind: GraphQLCompletionItemKind | undefined,
+): Monaco.languages.CompletionItemKind {
+  const completionKinds = instance.languages.CompletionItemKind;
+  const kindMap: Record<GraphQLCompletionItemKind, Monaco.languages.CompletionItemKind> = {
+    1: completionKinds.Text,
+    2: completionKinds.Method,
+    3: completionKinds.Function,
+    4: completionKinds.Constructor,
+    5: completionKinds.Field,
+    6: completionKinds.Variable,
+    7: completionKinds.Class,
+    8: completionKinds.Interface,
+    9: completionKinds.Module,
+    10: completionKinds.Property,
+    11: completionKinds.Unit,
+    12: completionKinds.Value,
+    13: completionKinds.Enum,
+    14: completionKinds.Keyword,
+    15: completionKinds.Snippet,
+    16: completionKinds.Color,
+    17: completionKinds.File,
+    18: completionKinds.Reference,
+    19: completionKinds.Folder,
+    20: completionKinds.EnumMember,
+    21: completionKinds.Constant,
+    22: completionKinds.Struct,
+    23: completionKinds.Event,
+    24: completionKinds.Operator,
+    25: completionKinds.TypeParameter,
+  };
+  return kind === undefined ? completionKinds.Text : kindMap[kind];
+}
+
+function buildFieldInfoIndex(schema: GraphQLSchema): Map<string, IndexedFieldInfo[]> {
+  const index = new Map<string, IndexedFieldInfo[]>();
+  for (const type of Object.values(schema.getTypeMap())) {
+    if (!isObjectType(type) && !isInterfaceType(type)) continue;
+    for (const [fieldName, field] of Object.entries(type.getFields())) {
+      if (!field.description) continue;
+      const fields = index.get(fieldName) ?? [];
+      fields.push({ description: field.description, returnTypeName: getNamedType(field.type).name });
+      index.set(fieldName, fields);
+    }
   }
-  return null;
+  return index;
 }
 
 // Look up a field's description and snippet from the schema directly, since
 // graphql-language-service often leaves documentation empty for field completions.
 function getFieldInfo(
   schema: GraphQLSchema,
+  fieldIndex: ReadonlyMap<string, IndexedFieldInfo[]>,
   label: string,
   detail: string | undefined,
 ): { snippet: string | null; description: string | null } {
@@ -115,22 +167,13 @@ function getFieldInfo(
   const typeStr = detail?.includes(':') ? detail.split(':').slice(1).join(':') : (detail ?? '');
   const baseTypeName = typeStr.replace(/[^a-zA-Z0-9_]/g, '');
 
-  // Search all object/interface types for a field named `label` to get its description.
-  // Prefer a hit where the field's return type matches the detail.
-  let description: string | null = null;
-  for (const type of Object.values(schema.getTypeMap())) {
-    if (!isObjectType(type) && !isInterfaceType(type)) continue;
-    const fields = type.getFields();
-    if (!(label in fields)) continue;
-    const field = fields[label];
-    if (!field.description) continue;
-    const fieldBase = getNamedType(field.type).name;
-    if (!baseTypeName || fieldBase === baseTypeName) {
-      description = field.description;
-      break;
-    }
-    if (!description) description = field.description;
-  }
+  // Prefer a field whose return type matches the completion detail, falling back to
+  // the first field with this name. The index preserves schema type traversal order.
+  const fieldInfos = fieldIndex.get(label) ?? [];
+  const matchingField = !baseTypeName
+    ? fieldInfos[0]
+    : fieldInfos.find((field) => field.returnTypeName === baseTypeName) ?? fieldInfos[0];
+  const description = matchingField?.description ?? null;
 
   // Build a selection-set snippet based on the return type.
   if (!baseTypeName) return { snippet: null, description };
@@ -174,13 +217,19 @@ function registerCompletionProvider(schema: GraphQLSchema): void {
         return {
           incomplete: true,
           suggestions: filtered.map((entry) => {
-            const { snippet, description } = getFieldInfo(schema, entry.label, entry.detail ?? undefined);
+            const { snippet, description } = getFieldInfo(
+              schema,
+              fieldInfoIndex,
+              entry.label,
+              entry.detail ?? undefined,
+            );
             const docString = description ?? resolveDocString(entry.documentation);
+            const word = model.getWordUntilPosition(position);
             return {
               label: docString
                 ? { label: entry.label, description: docString.split('\n')[0].slice(0, 120) }
                 : entry.label,
-              kind: entry.kind as unknown as Monaco.languages.CompletionItemKind,
+              kind: toMonacoCompletionKind(m, entry.kind),
               detail: entry.detail ?? '',
               documentation: docString ? { value: docString } : undefined,
               insertText: snippet ?? entry.insertText ?? entry.label,
@@ -189,8 +238,7 @@ function registerCompletionProvider(schema: GraphQLSchema): void {
                 : undefined,
               sortText: entry.sortText,
               filterText: entry.filterText ?? entry.label,
-              // Monaco fills in the replacement range from the word at cursor when undefined.
-              range: undefined as unknown as Monaco.IRange,
+              range: new m.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn),
             };
           }),
         };
@@ -199,7 +247,6 @@ function registerCompletionProvider(schema: GraphQLSchema): void {
       }
     },
   });
-  console.log('[hex] Completion provider registered for graphql language');
 }
 
 export function applyIntrospection(
@@ -210,33 +257,21 @@ export function applyIntrospection(
     console.warn('[hex] applyIntrospection: mode not initialized, skipping');
     return;
   }
-  console.log('[hex] applyIntrospection: applying schema for', uri);
   // Update hover, diagnostics, and formatting (worker-based).
   mode.setSchemaConfig([{ uri, introspectionJSON, fileMatch: ['**'] }]);
-  console.log('[hex] applyIntrospection: schema config set, schemas:', mode.schemas);
-}
-
-function tryPrettyJson(s: string): string {
-  try { return JSON.stringify(JSON.parse(s), null, 2); } catch { return s; }
 }
 
 export async function refreshSchema(): Promise<void> {
   const { endpoint, headers, cookies, setSchemaStatus } = useStore.getState();
-  console.log('[hex] refreshSchema: endpoint =', endpoint);
-  if (!endpoint) {
-    console.log('[hex] refreshSchema: no endpoint, skipping');
-    return;
-  }
+  if (!endpoint) return;
   setSchemaStatus('loading');
   try {
     const headersMap = Object.fromEntries(headers);
     const cookiesMap = Object.fromEntries(cookies);
-    console.log('[hex] refreshSchema: fetching introspection from', endpoint);
     const introspection = await fetchIntrospection(endpoint, headersMap, cookiesMap);
-    console.log('[hex] refreshSchema: introspection fetched, keys =', Object.keys(introspection));
 
     builtSchema = buildClientSchema(introspection);
-    console.log('[hex] refreshSchema: schema built, types =', Object.keys(builtSchema.getTypeMap()).length);
+    fieldInfoIndex = buildFieldInfoIndex(builtSchema);
 
     // Update hover/diagnostics/formatting worker with the schema.
     applyIntrospection(endpoint, introspection);
@@ -244,15 +279,9 @@ export async function refreshSchema(): Promise<void> {
     registerCompletionProvider(builtSchema);
 
     setSchemaStatus('loaded');
-    console.log('[hex] refreshSchema: schema applied');
   } catch (err) {
     console.error('[hex] refreshSchema: FAILED', err);
-    const errStr = String(err);
-    const MARKER = '\n\nRESPONSE_BODY\n';
-    const markerIdx = errStr.indexOf(MARKER);
-    const detail = markerIdx >= 0 ? errStr.slice(0, markerIdx) : errStr;
-    const rawBody = markerIdx >= 0 ? errStr.slice(markerIdx + MARKER.length) : undefined;
-    const responseBody = rawBody !== undefined ? tryPrettyJson(rawBody) : undefined;
+    const { detail, responseBody } = getGraphQLErrorDetails(err);
     setSchemaStatus('error', detail);
     useStore.getState().setErrorModal({ title: 'Schema Error', detail, responseBody });
   }
